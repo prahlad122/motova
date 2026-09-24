@@ -496,7 +496,7 @@ export default function DashboardPage() {
                   lg:text-[28px]
                 "
               >
-                Admin Dashboard
+                Vendor Dashboard
               </h1>
 
             </div>
