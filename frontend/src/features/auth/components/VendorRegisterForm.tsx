@@ -30,10 +30,39 @@ export default function VendorRegisterForm() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function validatePassword(password: string) {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long.";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one capital letter.";
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number.";
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>_\-\\[\]/`~'+;=]/.test(password)) {
+      return "Password must contain at least one special character.";
+    }
+
+    return "";
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setError("");
+
+    // Validate password before sending request
+    const passwordError = validatePassword(form.password);
+
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -89,7 +118,7 @@ export default function VendorRegisterForm() {
           value={form.password}
           onChange={(event) => updateField("password", event.target.value)}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
         />
 
@@ -118,7 +147,6 @@ export default function VendorRegisterForm() {
           )}
         </button>
       </div>
-
       {error && (
         <p
           role="alert"
@@ -155,10 +183,7 @@ export default function VendorRegisterForm() {
 
       <p className="text-center text-[16px] text-[#667085]">
         Already have an account?{" "}
-        <Link
-          href="/vendor/login"
-          className="text-[#315cff] hover:underline"
-        >
+        <Link href="/vendor/login" className="text-[#315cff] hover:underline">
           Sign in
         </Link>
       </p>

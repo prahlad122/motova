@@ -5,37 +5,37 @@ const services = [
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car1.png",
   },
   {
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car2.png",
   },
   {
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car3.png",
   },
   {
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car4.png",
   },
   {
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car5.png",
   },
   {
     title: "Lorem ipsum",
     category: "Lorem Ips",
     description: "Lorem ipsum dolor sit amet consectetur.",
-    image: "/images/service-1.png",
+    image: "/images/car6.png",
   },
 ];
 
