@@ -20,8 +20,9 @@ async function request<T>(path: string, body: T): Promise<AuthResponse> {
     throw new Error("Unable to connect to the server. Please try again.");
   }
 
-  const data: Partial<AuthResponse> & { message?: string } =
-    await response.json().catch(() => ({}));
+  const data: Partial<AuthResponse> & { message?: string } = await response
+    .json()
+    .catch(() => ({}));
 
   if (!response.ok || !data.success || !data.token || !data.user) {
     throw new Error(data.message ?? "Authentication failed. Please try again.");

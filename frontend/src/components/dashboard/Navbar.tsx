@@ -72,15 +72,9 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
   function handleConfirmLogout() {
     setLoggingOut(true);
 
-    // Remove complete authentication session
     clearAuthSession();
 
-    // Redirect according to current dashboard
-    if (pathname.startsWith("/admin")) {
-      router.replace("/admin/login");
-    } else {
-      router.replace("/vendor/login");
-    }
+    router.replace("/login");
 
     setLogoutModalOpen(false);
     setLoggingOut(false);
@@ -100,17 +94,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
   return (
     <>
       {/* Navbar */}
-      <header
-        className="
-          flex h-[58px] shrink-0
-          items-center justify-between
-          border-b border-[#eceef0]
-          bg-white
-          px-3
-          sm:px-4
-          lg:px-6
-        "
-      >
+      <header className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#eceef0] bg-white px-3 sm:px-4 lg:px-6">
         {/* Left */}
         <div className="flex min-w-0 items-center gap-2">
           {/* Mobile Menu */}
@@ -118,60 +102,22 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
             type="button"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open menu"
-            className="
-              flex h-8 w-8 shrink-0
-              items-center justify-center
-              rounded-md
-              text-[#44484e]
-              hover:bg-[#f5f6f7]
-              md:hidden
-            "
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#44484e] hover:bg-[#f5f6f7] md:hidden"
           >
             <Icon name="menu" className="text-[21px]" />
           </button>
 
-          <h1
-            className="
-              truncate
-              text-[16px]
-              font-semibold
-              tracking-[-0.2px]
-              text-[#25282d]
-              sm:text-[17px]
-            "
-          >
+          <h1 className="truncate text-[16px] font-semibold tracking-[-0.2px] text-[#25282d] sm:text-[17px]">
             Dashboard
           </h1>
         </div>
 
         {/* Right */}
-        <div
-          className="
-            flex shrink-0
-            items-center
-            gap-1.5
-            sm:gap-2
-          "
-        >
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {/* New Entry */}
           <button
             type="button"
-            className="
-              flex h-[30px] shrink-0
-              items-center justify-center
-              gap-1
-              rounded-full
-              bg-[#3d82f6]
-              px-3
-              text-[10px]
-              font-medium
-              whitespace-nowrap
-              text-white
-              transition
-              hover:bg-[#3275e8]
-              sm:px-4
-              sm:text-[11px]
-            "
+            className="flex h-[30px] shrink-0 items-center justify-center gap-1 rounded-full bg-[#3d82f6] px-3 text-[10px] font-medium whitespace-nowrap text-white transition hover:bg-[#3275e8] sm:px-4 sm:text-[11px]"
           >
             <span className="hidden sm:inline">New entry</span>
 
@@ -184,15 +130,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
           <button
             type="button"
             aria-label="Notifications"
-            className="
-              flex h-[30px] w-[30px] shrink-0
-              items-center justify-center
-              rounded-full
-              border border-[#e7e9ec]
-              bg-white
-              text-[#44484e]
-              hover:bg-[#f7f8f9]
-            "
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-[#e7e9ec] bg-white text-[#44484e] hover:bg-[#f7f8f9]"
           >
             <Icon name="notifications" className="text-[16px]" />
           </button>
@@ -201,15 +139,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
           <button
             type="button"
             aria-label="Search"
-            className="
-              flex h-[30px] w-[30px] shrink-0
-              items-center justify-center
-              rounded-full
-              border border-[#e7e9ec]
-              bg-white
-              text-[#44484e]
-              hover:bg-[#f7f8f9]
-            "
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-[#e7e9ec] bg-white text-[#44484e] hover:bg-[#f7f8f9]"
           >
             <Icon name="search" className="text-[16px]" />
           </button>
@@ -221,87 +151,29 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
               onClick={() => setProfileOpen((prev) => !prev)}
               aria-label="Profile"
               aria-expanded={profileOpen}
-              className="
-                flex h-[29px] w-[29px]
-                items-center justify-center
-                rounded-full
-                bg-[#c5b09d]
-                text-[10px]
-                font-semibold
-                text-white
-                outline-none
-                transition
-                hover:ring-2
-                hover:ring-[#3d82f6]/30
-              "
+              className="flex h-[29px] w-[29px] items-center justify-center rounded-full bg-[#c5b09d] text-[10px] font-semibold text-white outline-none transition hover:ring-2 hover:ring-[#3d82f6]/30"
             >
               {avatarLetter}
             </button>
 
             {/* Profile Dropdown */}
             {profileOpen && (
-              <div
-                className="
-                  absolute
-                  right-0
-                  top-[calc(100%+10px)]
-                  z-[100]
-                  w-[220px]
-                  overflow-hidden
-                  rounded-xl
-                  border
-                  border-[#e5e7eb]
-                  bg-white
-                  shadow-[0_8px_30px_rgba(0,0,0,0.12)]
-                "
-              >
+              <div className="absolute right-0 top-[calc(100%+10px)] z-[100] w-[220px] overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
                 {/* Profile Information */}
-                <div
-                  className="
-                    border-b
-                    border-[#eef0f2]
-                    px-4
-                    py-3
-                  "
-                >
+                <div className="border-b border-[#eef0f2] px-4 py-3">
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div
-                      className="
-                        flex h-[38px] w-[38px]
-                        shrink-0
-                        items-center justify-center
-                        rounded-full
-                        bg-[#c5b09d]
-                        text-[13px]
-                        font-semibold
-                        text-white
-                      "
-                    >
+                    <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[#c5b09d] text-[13px] font-semibold text-white">
                       {avatarLetter}
                     </div>
 
                     {/* User Details */}
                     <div className="min-w-0">
-                      <p
-                        className="
-                          truncate
-                          text-[13px]
-                          font-semibold
-                          text-[#25282d]
-                        "
-                      >
+                      <p className="truncate text-[13px] font-semibold text-[#25282d]">
                         {userName}
                       </p>
 
-                      <p
-                        className="
-                          mt-0.5
-                          truncate
-                          text-[11px]
-                          text-[#73777d]
-                        "
-                      >
+                      <p className="mt-0.5 truncate text-[11px] text-[#73777d]">
                         {displayRole}
                       </p>
                     </div>
@@ -314,18 +186,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setProfileOpen(false)}
-                    className="
-                      flex w-full
-                      items-center gap-3
-                      rounded-lg
-                      px-3 py-2.5
-                      text-left
-                      text-[12px]
-                      font-medium
-                      text-[#3f4348]
-                      transition
-                      hover:bg-[#f5f7f9]
-                    "
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#3f4348] transition hover:bg-[#f5f7f9]"
                   >
                     <Icon name="person" className="text-[17px]" />
 
@@ -336,18 +197,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setProfileOpen(false)}
-                    className="
-                      flex w-full
-                      items-center gap-3
-                      rounded-lg
-                      px-3 py-2.5
-                      text-left
-                      text-[12px]
-                      font-medium
-                      text-[#3f4348]
-                      transition
-                      hover:bg-[#f5f7f9]
-                    "
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#3f4348] transition hover:bg-[#f5f7f9]"
                   >
                     <Icon name="settings" className="text-[17px]" />
 
@@ -356,28 +206,11 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                 </div>
 
                 {/* Logout */}
-                <div
-                  className="
-                    border-t
-                    border-[#eef0f2]
-                    p-1.5
-                  "
-                >
+                <div className="border-t border-[#eef0f2] p-1.5">
                   <button
                     type="button"
                     onClick={handleLogoutClick}
-                    className="
-                      flex w-full
-                      items-center gap-3
-                      rounded-lg
-                      px-3 py-2.5
-                      text-left
-                      text-[12px]
-                      font-medium
-                      text-[#dc2626]
-                      transition
-                      hover:bg-[#fef2f2]
-                    "
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#dc2626] transition hover:bg-[#fef2f2]"
                   >
                     <Icon name="logout" className="text-[17px]" />
 
@@ -393,12 +226,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
       {/* Logout Confirmation Modal */}
       {logoutModalOpen && (
         <div
-          className="
-            fixed inset-0 z-[200]
-            flex items-center justify-center
-            bg-black/40
-            px-4
-          "
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4"
           onClick={() => {
             if (!loggingOut) {
               setLogoutModalOpen(false);
@@ -409,83 +237,35 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="logout-title"
-            className="
-              w-full
-              max-w-[380px]
-              rounded-2xl
-              bg-white
-              p-6
-              shadow-[0_20px_60px_rgba(0,0,0,0.2)]
-            "
+            className="w-full max-w-[380px] rounded-2xl bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]"
             onClick={(event) => event.stopPropagation()}
           >
             {/* Logout Icon */}
-            <div
-              className="
-                mb-4
-                flex h-11 w-11
-                items-center justify-center
-                rounded-full
-                bg-[#fef2f2]
-                text-[#dc2626]
-              "
-            >
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#fef2f2] text-[#dc2626]">
               <Icon name="logout" className="text-[22px]" />
             </div>
 
             {/* Title */}
             <h2
               id="logout-title"
-              className="
-                text-[18px]
-                font-semibold
-                text-[#25282d]
-              "
+              className="text-[18px] font-semibold text-[#25282d]"
             >
               Logout?
             </h2>
 
             {/* Description */}
-            <p
-              className="
-                mt-2
-                text-[13px]
-                leading-5
-                text-[#73777d]
-              "
-            >
+            <p className="mt-2 text-[13px] leading-5 text-[#73777d]">
               Are you sure you want to logout from your account?
             </p>
 
             {/* Actions */}
-            <div
-              className="
-                mt-6
-                flex
-                justify-end
-                gap-2
-              "
-            >
+            <div className="mt-6 flex justify-end gap-2">
               {/* Cancel */}
               <button
                 type="button"
                 disabled={loggingOut}
                 onClick={() => setLogoutModalOpen(false)}
-                className="
-                  h-[36px]
-                  rounded-lg
-                  border
-                  border-[#e1e4e8]
-                  bg-white
-                  px-4
-                  text-[12px]
-                  font-medium
-                  text-[#44484e]
-                  transition
-                  hover:bg-[#f5f6f7]
-                  disabled:cursor-not-allowed
-                  disabled:opacity-50
-                "
+                className="h-[36px] rounded-lg border border-[#e1e4e8] bg-white px-4 text-[12px] font-medium text-[#44484e] transition hover:bg-[#f5f6f7] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -495,20 +275,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                 type="button"
                 disabled={loggingOut}
                 onClick={handleConfirmLogout}
-                className="
-                  flex h-[36px]
-                  items-center justify-center
-                  rounded-lg
-                  bg-[#dc2626]
-                  px-4
-                  text-[12px]
-                  font-medium
-                  text-white
-                  transition
-                  hover:bg-[#b91c1c]
-                  disabled:cursor-not-allowed
-                  disabled:opacity-60
-                "
+                className="flex h-[36px] items-center justify-center rounded-lg bg-[#dc2626] px-4 text-[12px] font-medium text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loggingOut ? "Logging out..." : "Logout"}
               </button>

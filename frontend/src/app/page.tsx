@@ -12,7 +12,6 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-
       <main>
         <Hero />
         <Metrics />
@@ -22,7 +21,6 @@ export default function HomePage() {
         <CTA />
         <FAQ />
       </main>
-
       <Footer />
     </>
   );

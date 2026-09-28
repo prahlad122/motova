@@ -1,14 +1,10 @@
-
 import type { AuthResponse } from "./auth.types";
 
 const AUTH_STORAGE_KEY = "motova.auth";
 
 export function saveAuthSession(response: AuthResponse) {
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(
-      AUTH_STORAGE_KEY,
-      JSON.stringify(response)
-    );
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(response));
   }
 }
 
@@ -38,12 +34,8 @@ export function clearAuthSession() {
   }
 }
 
-export function getDashboardPath(
-  role: AuthResponse["user"]["role"]
-) {
-  return role === "ADMIN"
-    ? "/admin/dashboard"
-    : "/vendor/dashboard";
+export function getDashboardPath(role: AuthResponse["user"]["role"]) {
+  return role === "ADMIN" ? "/admin/dashboard" : "/vendor/dashboard";
 }
 
 export function getAuthErrorMessage(error: unknown) {
@@ -51,4 +43,3 @@ export function getAuthErrorMessage(error: unknown) {
     ? error.message
     : "Something went wrong. Please try again.";
 }
-

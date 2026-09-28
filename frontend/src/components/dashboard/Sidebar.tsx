@@ -38,19 +38,7 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`
-          fixed inset-y-0 left-0 z-50
-          flex w-[250px] flex-col
-          bg-[#17191d] text-white
-          transition-transform duration-300 ease-in-out
-
-          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-
-          md:static
-          md:w-[168px]
-          md:shrink-0
-          md:translate-x-0
-        `}
+        className={`fixed inset-y-0 left-0 z-50 flex w-[250px] flex-col bg-[#17191d] text-white transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} md:static md:w-[168px] md:shrink-0 md:translate-x-0`}
       >
         {/* Logo */}
         <div className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#24272c] px-4">
@@ -74,14 +62,7 @@ export default function Sidebar({
             type="button"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu"
-            className="
-              flex h-8 w-8
-              items-center justify-center
-              rounded-md
-              text-[#c9ccd0]
-              hover:bg-[#24272c]
-              md:hidden
-            "
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#c9ccd0] hover:bg-[#24272c] md:hidden"
           >
             <Icon name="close" className="text-[20px]" />
           </button>
@@ -101,20 +82,7 @@ export default function Sidebar({
                 key={item.label}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`
-                  group relative flex h-[42px]
-                  items-center gap-3
-                  px-4
-                  text-[12px]
-                  font-medium
-                  transition-colors
-
-                  ${
-                    isActive
-                      ? "bg-[#22252a] text-white"
-                      : "text-[#d1d3d6] hover:bg-[#202328] hover:text-white"
-                  }
-                `}
+                className={`group relative flex h-[42px] items-center gap-3 px-4 text-[12px] font-medium transition-colors ${isActive ? "bg-[#22252a] text-white" : "text-[#d1d3d6] hover:bg-[#202328] hover:text-white"}`}
               >
                 {/* Active Indicator */}
                 {isActive && (
@@ -124,10 +92,7 @@ export default function Sidebar({
                 <Icon
                   name={item.icon}
                   filled={isActive}
-                  className={`
-    text-[18px]
-    ${isActive ? "text-[#3984ff]" : "text-[#c9ccd0] group-hover:text-white"}
-  `}
+                  className={`text-[18px] ${isActive ? "text-[#3984ff]" : "text-[#c9ccd0] group-hover:text-white"}`}
                 />
 
                 <span>{item.label}</span>
@@ -142,16 +107,7 @@ export default function Sidebar({
           <Link
             href="/settings"
             onClick={() => setMobileMenuOpen(false)}
-            className="
-              flex h-[40px]
-              items-center gap-3
-              px-4
-              text-[12px]
-              font-medium
-              text-[#d1d3d6]
-              hover:bg-[#202328]
-              hover:text-white
-            "
+            className="flex h-[40px] items-center gap-3 px-4 text-[12px] font-medium text-[#d1d3d6] hover:bg-[#202328] hover:text-white"
           >
             <Icon name="settings" className="text-[18px]" />
 
@@ -162,16 +118,7 @@ export default function Sidebar({
           <Link
             href="/help"
             onClick={() => setMobileMenuOpen(false)}
-            className="
-              flex h-[40px]
-              items-center gap-3
-              px-4
-              text-[12px]
-              font-medium
-              text-[#d1d3d6]
-              hover:bg-[#202328]
-              hover:text-white
-            "
+            className="flex h-[40px] items-center gap-3 px-4 text-[12px] font-medium text-[#d1d3d6] hover:bg-[#202328] hover:text-white"
           >
             <Icon name="help_outline" className="text-[18px]" />
 
