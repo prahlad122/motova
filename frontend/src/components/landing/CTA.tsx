@@ -9,14 +9,12 @@ export default function CTA() {
           <div className="relative z-30 flex w-1/2 max-w-[680px] flex-col justify-center gap-14">
             <div className="flex flex-col gap-2">
               <h2 className="text-[42px] font-bold leading-[1.2] tracking-[-1px] text-[#f9fafb] xl:text-[52px]">
-                Lorem ipsum dolor sit amet
+                Shop from your phone
               </h2>
 
               <p className="max-w-[650px] text-[18px] leading-[1.55] text-[#d6d7db] xl:text-[21px]">
-                Lorem ipsum dolor sit amet consectetur. Odio diam nulla tortor
-                ornare ultricies egestas tincidunt imperdiet. Purus scelerisque
-                purus pharetra morbi at massa. Eleifend pretium mauris sit duis
-                sapien.
+                Browse accessories, follow your orders and reorder in a few taps
+                with the Motova app.
               </p>
             </div>
 
@@ -67,7 +65,7 @@ export default function CTA() {
             <div className="absolute right-[24%] top-[-105px] z-10 h-[540px] w-[270px] xl:right-[23%] xl:h-[580px] xl:w-[290px]">
               <div className="relative h-full w-full overflow-hidden rounded-[32px] border-[6px] border-[#2d2d2d] bg-[#1a1a1a] shadow-2xl">
                 <Image
-                  src="/images/service-5.png"
+                  src="/images/image.png"
                   alt="Motova car details application screen"
                   fill
                   className="object-cover"
@@ -94,14 +92,12 @@ export default function CTA() {
           <div className="relative z-40 w-full max-w-[680px]">
             <div className="flex flex-col gap-4">
               <h2 className="max-w-[620px] text-[30px] font-bold leading-[1.15] tracking-[-0.6px] text-[#f9fafb] sm:text-[36px] sm:leading-[1.2] md:text-[42px]">
-                Lorem ipsum dolor sit amet
+                Shop from your phone
               </h2>
 
               <p className="max-w-[620px] text-[15px] leading-[1.55] text-[#d6d7db] sm:text-[17px] md:text-[18px]">
-                Lorem ipsum dolor sit amet consectetur. Odio diam nulla tortor
-                ornare ultricies egestas tincidunt imperdiet. Purus scelerisque
-                purus pharetra morbi at massa. Eleifend pretium mauris sit duis
-                sapien.
+                Browse accessories, follow your orders and reorder in a few taps
+                with the Motova app.
               </p>
             </div>
 

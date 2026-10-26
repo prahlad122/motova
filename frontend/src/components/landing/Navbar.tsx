@@ -4,13 +4,10 @@ import Link from "next/link";
 export default function Navbar() {
   return (
     <header className="bg-[#16181d] py-4">
-<div className="mx-auto  flex w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-10">        {/* ================= LOGO ================= */}
-
-        <Link
-          href="/"
-          className="flex items-center"
-          aria-label="Motova home"
-        >
+      <div className="mx-auto  flex w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 md:px-12 lg:px-8 xl:px-10">
+        {" "}
+        {/* ================= LOGO ================= */}
+        <Link href="/" className="flex items-center" aria-label="Motova home">
           <Image
             src="/images/logo.svg"
             alt="Motova"
@@ -20,9 +17,7 @@ export default function Navbar() {
             className="h-auto w-[163px]"
           />
         </Link>
-
         {/* ================= LOGIN ================= */}
-
         <div className="hidden items-center md:flex">
           <Link
             href="/login"
@@ -52,7 +47,7 @@ export default function Navbar() {
               className="h-[16px] w-[16px] shrink-0 object-contain"
             />
 
-            <span className="font-semibold">Join here</span>
+            <span className="font-semibold">Log in</span>
           </Link>
         </div>
       </div>

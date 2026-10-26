@@ -2,19 +2,19 @@ import Image from "next/image";
 
 const features = [
   {
-    title: "Fast building",
+    title: "Reviewed sellers",
     icon: "/images/feature-fast.svg",
   },
   {
-    title: "Easy to edit",
+    title: "Delivery across India",
     icon: "/images/feature-edit.svg",
   },
   {
-    title: "Responsiveness",
+    title: "Wide product range",
     icon: "/images/feature-responsive.svg",
   },
   {
-    title: "No code needed",
+    title: "Easy returns",
     icon: "/images/feature-code.svg",
   },
 ];
@@ -52,7 +52,7 @@ export default function Features() {
 
             <div className="absolute z-30 h-[390px] w-[205px] overflow-hidden rounded-[30px] border-[6px] border-[#2d2d2d] bg-[#1a1a1a] shadow-[0_20px_40px_rgba(0,0,0,0.35)] sm:h-[440px] sm:w-[230px] sm:rounded-[32px] sm:border-[7px] lg:h-[460px] lg:w-[235px] lg:rounded-[36px]">
               <Image
-                src="/images/cta-phone-back.png"
+                src="/images/image.png"
                 alt="Motova features"
                 fill
                 className="object-cover"
@@ -65,12 +65,11 @@ export default function Features() {
         <div className="flex w-full flex-1 flex-col gap-8 sm:gap-10 lg:max-w-[560px] lg:gap-9">
           <div className="flex flex-col gap-4 text-center lg:text-left">
             <h2 className="text-[30px] font-bold leading-[1.15] tracking-[-0.8px] text-[#f9fafb] sm:text-[34px] lg:text-[38px]">
-              Our features
+              Why shop on Motova
             </h2>
 
             <p className="mx-auto max-w-[520px] text-[15px] leading-[1.55] text-[#d6d7db] sm:text-[16px] lg:mx-0 lg:text-[16px]">
-              Few good reasons why you should use Motova to make your experience
-              easier and better.
+              A few reasons car owners choose Motova.
             </p>
           </div>
 

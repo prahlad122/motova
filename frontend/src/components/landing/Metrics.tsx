@@ -1,23 +1,23 @@
 const metrics = [
   {
-    number: "10+",
-    line1: "Service",
-    line2: "Geographics",
+    number: "100+",
+    line1: "Happy",
+    line2: "customers",
   },
   {
-    number: "30+",
-    line1: "Fortune",
-    line2: "500 Clients",
+    number: "300+",
+    line1: "Products",
+    line2: "available",
   },
   {
-    number: "10k+",
-    line1: "Dedicated",
-    line2: "Members",
+    number: "100+",
+    line1: "Product ",
+    line2: "categories",
   },
   {
-    number: "8+",
-    line1: "Years of",
-    line2: "Journey",
+    number: "80+",
+    line1: "Orders",
+    line2: "delivered",
   },
 ];
 

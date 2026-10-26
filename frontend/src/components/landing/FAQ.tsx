@@ -4,39 +4,33 @@ import { useState } from "react";
 
 const faqs = [
   {
-    question:
-      "Lorem ipsum dolor sit amet consectetur. Morbi fringilla ac duis dui amet duis nulla praesent.",
+    question: "What is Motova?",
     answer:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Condimentum diam orci pretium a pharetra, feugiat cursus.",
+      "Motova is an online marketplace where you can buy car accessories from sellers across India, all in one place.",
   },
   {
-    question:
-      "Lorem ipsum dolor sit amet consectetur. Vulputate ac varius non duis etiam aliquam arcu fermentum.",
+    question: "How do I place an order?",
     answer:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Condimentum diam orci pretium a pharetra, feugiat cursus. Dictumst risus, sem egestas odio cras adipiscing vulputate.",
+      "Pick a category, choose your product, add it to your cart and pay online. Available payment methods will be shown at checkout.",
   },
   {
-    question:
-      "Lorem ipsum dolor sit amet consectetur. Iaculis vitae tincidunt purus eu euismod quis.",
+    question: "Are the products genuine?",
     answer:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit.",
+      "Every seller is reviewed by the Motova team before they can sell, and every new product is checked before it appears on the site. If something is not as described, contact us and we will help.",
   },
   {
-    question:
-      "Lorem ipsum dolor sit amet consectetur. Quisque ut felis dictum gravida purus lacus eros vel.",
+    question: "How long does delivery take?",
     answer:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit.",
+      "Delivery times depend on your location, the seller and the courier partner. Once your order is confirmed, check your order details for the estimated delivery date and available tracking information.",
   },
   {
-    question:
-      "Lorem ipsum dolor sit amet consectetur. Lectus velit eu egestas velit nam et aenean habitant.",
+    question: "How do returns and refunds work?",
     answer:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit.",
+      "Return eligibility depends on the product and the applicable return policy. Please review the return conditions before placing your order or contact our support team for assistance with returns and refunds.",
   },
 ];
-
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(1);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section className="bg-[#f9fafb] py-20">
@@ -63,9 +57,7 @@ export default function FAQ() {
               >
                 <button
                   type="button"
-                  onClick={() =>
-                    setOpenIndex(isOpen ? null : index)
-                  }
+                  onClick={() => setOpenIndex(isOpen ? null : index)}
                   className="flex w-full items-center justify-between gap-5 py-7 text-left"
                   aria-expanded={isOpen}
                   aria-controls={answerId}
