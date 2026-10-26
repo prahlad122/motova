@@ -2,39 +2,45 @@ import Image from "next/image";
 
 const services = [
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Floor mats",
+    category: "Interior",
+    description:
+      "Custom-fit mats that protect your car floor from dust, mud and spills.",
     image: "/images/car1.png",
   },
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Headlights and lamps",
+    category: "Lighting",
+    description:
+      "LED bulbs, fog lamps and projector lights for brighter night driving.",
     image: "/images/car2.png",
   },
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Sound systems",
+    category: "Audio",
+    description:
+      "Speakers, subwoofers, amplifiers and stereos to upgrade every drive.",
     image: "/images/car3.png",
   },
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Interior decor",
+    category: "Interior",
+    description:
+      "Ambient lights, steering covers and trims for a fresh cabin look.",
     image: "/images/car4.png",
   },
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Curtains and sunshades",
+    category: "Comfort",
+    description:
+      "Roller and slide-fit curtains that keep the sun and heat out.",
     image: "/images/car5.png",
   },
   {
-    title: "Lorem ipsum",
-    category: "Lorem Ips",
-    description: "Lorem ipsum dolor sit amet consectetur.",
+    title: "Chargers and power supply",
+    category: "Electronics",
+    description:
+      "Fast car chargers and power accessories to keep every device running.",
     image: "/images/car6.png",
   },
 ];
@@ -45,12 +51,11 @@ export default function Services() {
       <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-16 px-5 md:px-[55px]">
         <div className="mx-auto flex max-w-[800px] flex-col gap-5 text-center">
           <h2 className="text-3xl font-bold text-[#f9fafb] md:text-[40px]">
-            Discover our best car services
+            Shop by category
           </h2>
 
           <p className="text-base leading-[1.5] text-[#d6d7db] md:text-lg">
-            Lorem ipsum dolor sit amet consectetur. Quam sed eu nulla lectus
-            aliquet adipiscing. Dignissim risus erat massa.
+            Find the right accessory for your car. Every product comes from a seller reviewed by the Motova team.
           </p>
         </div>
 

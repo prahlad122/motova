@@ -4,21 +4,20 @@ import Link from "next/link";
 export default function Hero() {
   return (
     <section className="overflow-hidden bg-[#16181d] pt-10 sm:pt-14 md:pt-20">
-      <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-col items-center gap-3 px-5 text-center sm:gap-6 sm:px-8 md:px-12 lg:min-h-[650px] lg:flex-row lg:gap-12 lg:px-8 lg:text-left xl:px-10">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-col  gap-63 px-5 text-center sm:gap-6 sm:px-8 md:px-12 lg:min-h-[650px] lg:flex-row lg:gap-12 lg:px-8 lg:text-left xl:px-10">
         <div className="z-10 flex w-full max-w-[760px] flex-1 flex-col gap-7 lg:w-1/2 lg:gap-10">
           <h1 className="mx-auto max-w-[650px] text-[42px] font-poppins font-bold leading-[1.15] tracking-tight text-[#f9fafb] sm:text-5xl md:text-6xl lg:mx-0 lg:text-[64px] xl:text-[80px]">
-            Lorem{" "}
+            Everything{" "}
             <span className="text-[#3b82f6]">
-              ipsum
+              your car needs
               <br className="hidden lg:block" />
-              dolor
             </span>{" "}
-            sit amet
+            at your door
           </h1>
 
           <p className="mx-auto max-w-[600px] text-[16px] leading-[1.55] text-[#d6d7db] sm:text-lg md:text-[20px] lg:mx-0 xl:text-[21px] font-poppins">
-            Lorem ipsum dolor sit amet consectetur. Ut diam tortor urna et
-            viverra vitae pellentesque adipiscing.
+            Shop floor mats, headlights, sound systems, interior decor and more
+            from trusted sellers across India, with delivery to your door
           </p>
 
           <div className="flex w-full sm:mx-auto sm:max-w-[500px] lg:mx-0 lg:max-w-none">
@@ -34,7 +33,7 @@ export default function Hero() {
                 className="h-[16px] w-[16px] shrink-0 object-contain"
               />
 
-              <span className="font-semibold">Join here</span>
+              <span className="font-semibold">Start shopping</span>
             </Link>
           </div>
 
@@ -58,7 +57,7 @@ export default function Hero() {
             <div className="relative z-20 h-[500px] w-[240px] overflow-hidden rounded-[30px] border-[6px] border-[#2d2d2d] bg-[#1a1a1a] shadow-[0_20px_40px_rgba(0,0,0,0.5)] sm:h-[560px] sm:w-[270px] sm:rounded-[34px] sm:border-[7px]">
               <Image
                 src="/images/feature-phone.png"
-                alt="Feature phone"
+                alt="Motova app home screen"
                 fill
                 priority
                 className="object-cover object-top"

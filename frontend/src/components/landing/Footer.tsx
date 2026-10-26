@@ -4,23 +4,23 @@ import Link from "next/link";
 const columns = [
   {
     title: "Company",
-    links: ["About Us", "Blog", "Careers", "Contact Us"],
+    links: ["About Us", "Contact Us", "Sell on Motova"],
   },
   {
     title: "Support",
-    links: ["Help Center", "Safety Center", "Community Guidelines"],
+    links: [
+      "Help Center",
+      "Track Order",
+      "Shipping Policy",
+      "Return Policy",
+      "FAQs",
+    ],
   },
   {
     title: "Legal",
-    links: [
-      "Cookies Policy",
-      "Privacy Policy",
-      "Terms of Service",
-      "Law Enforcement",
-    ],
+    links: ["Privacy Policy", "Terms of Service", "Cookies Policy"],
   },
 ];
-
 export default function Footer() {
   return (
     <footer className="bg-[#16181d] pt-12 sm:pt-14 lg:pt-16">
