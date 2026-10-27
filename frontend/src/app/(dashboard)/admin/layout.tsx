@@ -58,7 +58,7 @@ export default function AdminLayout({
 
   return (
     <main className="min-h-screen w-full overflow-hidden bg-white">
-      <div className="flex min-h-screen w-full">
+      <div className="flex h-screen overflow-hidden bg-[#f8f9fb]">
         {/* Sidebar */}
         <Sidebar
           navigation={adminNavigation}
