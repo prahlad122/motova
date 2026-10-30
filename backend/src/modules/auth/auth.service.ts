@@ -1,10 +1,11 @@
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { z } from "zod";
+import { success, z } from "zod";
 
 import { prisma } from "../../config/database";
 import {
+  ReturnReason,
   UserRole,
   UserStatus,
 } from "../../generated/prisma/client";
@@ -44,81 +45,162 @@ function generateToken(user: { id: string; role: UserRole }) {
     }
   );
 }
-export async function registerVendor(
-  input: unknown,
-): Promise<AuthResult> {
+// export async function registerVendor(
+//   input: unknown,
+// ): Promise<AuthResult> {
+//   const result = vendorRegisterSchema.safeParse(input);
+
+//   if (!result.success) {
+//     return {
+//       status: 400,
+//       body: {
+//         success: false,
+//         message: "Validation failed",
+//         errors: result.error.flatten(),
+//       },
+//     };
+//   }
+
+//   const { name, email, mobile, password } = result.data;
+
+//   const existingUser = await prisma.user.findFirst({
+//     where: {
+//       OR: [{ email }, { mobile }],
+//     },
+//   });
+
+//   if (existingUser) {
+//     return {
+//       status: 409,
+//       body: {
+//         success: false,
+//         message:
+//           existingUser.email === email
+//             ? "Email is already registered"
+//             : "Mobile number is already registered",
+//       },
+//     };
+//   }
+
+//   const passwordHash = await bcrypt.hash(password, 12);
+
+//   const user = await prisma.user.create({
+//     data: {
+//       name,
+//       email,
+//       mobile,
+//       passwordHash,
+//       role: UserRole.VENDOR,
+//       status: UserStatus.ACTIVE,
+//     },
+//     select: {
+//       id: true,
+//       name: true,
+//       email: true,
+//       mobile: true,
+//       role: true,
+//       status: true,
+//       createdAt: true,
+//     },
+//   });
+
+//   const token = generateToken({
+//     id: user.id,
+//     role: user.role,
+//   });
+
+//   return {
+//     status: 201,
+//     body: {
+//       success: true,
+//       message: "Vendor registered successfully",
+//       token,
+//       user,
+//     },
+//   };
+// }
+
+export async function  registerVendor(
+  input : unknown,
+) : Promise <AuthResult> {
   const result = vendorRegisterSchema.safeParse(input);
-
-  if (!result.success) {
-    return {
-      status: 400,
-      body: {
-        success: false,
-        message: "Validation failed",
-        errors: result.error.flatten(),
-      },
-    };
-  }
-
-  const { name, email, mobile, password } = result.data;
-
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [{ email }, { mobile }],
+  if(!result.success){
+    return{
+      status:400,
+      body:{
+        success:false,
+        message:"Validation failed!",
+        errors:result.error.flatten(),
     },
-  });
-
-  if (existingUser) {
-    return {
-      status: 409,
-      body: {
-        success: false,
-        message:
-          existingUser.email === email
-            ? "Email is already registered"
-            : "Mobile number is already registered",
-      },
-    };
   }
+}
 
-  const passwordHash = await bcrypt.hash(password, 12);
+const {name , email , mobile , password } = result.data;
+const existingUser = await prisma.user.findFirst({
+  where:{
+    OR:[{email} , {mobile}],
+  },
+});
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      mobile,
-      passwordHash,
-      role: UserRole.VENDOR,
-      status: UserStatus.ACTIVE,
+if(existingUser){
+  return {
+    status:409,
+    body:{
+      success:false,
+      message:
+      existingUser.email === email ? "Email is already exist in DB!" : "Mobile number is already registered!"
+    }
+  }
+}
+
+const passwordHash = await bcrypt.hash(password , 12);
+
+// create the user and vendor profile automatically 
+// if either operation fails , Prisma rolls back both.
+
+const user = await prisma.$transaction(async(tx) =>{
+  const createdUser = await tx.user.create({
+    data : {
+      name , email , mobile , passwordHash ,
+      role:UserRole.VENDOR,
+      status:UserStatus.ACTIVE,
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
+    select : {
+      id : true,
+      name : true,
+      email:true,
       mobile: true,
       role: true,
       status: true,
       createdAt: true,
-    },
-  });
+    }
+  })
 
-  const token = generateToken({
-    id: user.id,
-    role: user.role,
-  });
+  await tx.vendorProfile.create({
+    data : {
+      userId : createdUser.id,
+      verificationStatus:"NOT_SUBMITTED",
+    }
+  })
 
-  return {
-    status: 201,
-    body: {
-      success: true,
-      message: "Vendor registered successfully",
-      token,
-      user,
-    },
-  };
+  return createdUser;
+})
+
+const token = generateToken({
+  id:user.id,
+  role:user.role,
+});
+
+return {
+  status: 201,
+  body: {
+    success: true,
+    message: "Vendor registered successfully.",
+    token,
+    user,
+  },
+};
 }
-
 export async function loginVendor(
   input: unknown,
 ): Promise<AuthResult> {

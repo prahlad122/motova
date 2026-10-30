@@ -1,21 +1,9 @@
+
+import { parseApiResponse } from "@/lib/api-response";
+import type { AdminDashboardStats } from "./admin.types";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
-
-export interface AdminDashboardStats {
-  vendors: {
-    total: number;
-    active: number;
-    pending: number;
-    suspended: number;
-    newThisWeek: number;
-  };
-}
-
-interface AdminDashboardResponse {
-  success: boolean;
-  message: string;
-  data: AdminDashboardStats;
-}
 
 export async function getAdminDashboardStats(
   token: string
@@ -27,23 +15,15 @@ export async function getAdminDashboardStats(
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
       },
       cache: "no-store",
     });
-  } catch {
-    throw new Error("Unable to connect to the server. Please try again.");
-  }
-
-  const result: Partial<AdminDashboardResponse> = await response
-    .json()
-    .catch(() => ({}));
-
-  if (!response.ok || !result.success || !result.data?.vendors) {
+  } catch (error) {
     throw new Error(
-      result.message ?? "Unable to load admin dashboard statistics."
+      "Unable to connect to the server. Please try again.",
+      { cause: error }
     );
   }
 
-  return result.data;
+  return parseApiResponse<AdminDashboardStats>(response);
 }
