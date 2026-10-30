@@ -11,16 +11,22 @@ type NavbarProps = {
   setMobileMenuOpen: (open: boolean) => void;
 };
 
+type UserRole = "ADMIN" | "VENDOR";
+
 export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+
+  const currentRole: UserRole = pathname.startsWith("/admin")
+    ? "ADMIN"
+    : "VENDOR";
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const [userName, setUserName] = useState("User");
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState<UserRole>(currentRole);
 
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -28,15 +34,17 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
    * Load logged-in user
    */
   useEffect(() => {
-    const session = getAuthSession();
+    const session = getAuthSession(currentRole);
 
     if (!session?.user) {
+      setUserName("User");
+      setUserRole(currentRole);
       return;
     }
 
     setUserName(session.user.name || "User");
-    setUserRole(session.user.role || "");
-  }, []);
+    setUserRole(session.user.role || currentRole);
+  }, [currentRole]);
 
   /*
    * Close profile dropdown when clicking outside
@@ -72,12 +80,11 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
   function handleConfirmLogout() {
     setLoggingOut(true);
 
-    clearAuthSession();
-
-    router.replace("/login");
+    clearAuthSession(currentRole);
 
     setLogoutModalOpen(false);
-    setLoggingOut(false);
+
+    router.replace("/login");
   }
 
   /*
@@ -89,7 +96,7 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
    * Display role
    */
   const displayRole =
-    userRole === "VENDOR" ? "Vendor" : userRole === "ADMIN" ? "Admin" : "User";
+    userRole === "ADMIN" ? "Admin" : userRole === "VENDOR" ? "Vendor" : "User";
 
   return (
     <>
@@ -114,18 +121,6 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
 
         {/* Right */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {/* New Entry */}
-          <button
-            type="button"
-            className="flex h-[30px] shrink-0 items-center justify-center gap-1 rounded-full bg-[#3d82f6] px-3 text-[10px] font-medium whitespace-nowrap text-white transition hover:bg-[#3275e8] sm:px-4 sm:text-[11px]"
-          >
-            <span className="hidden sm:inline">New entry</span>
-
-            <span className="sm:hidden">New</span>
-
-            <Icon name="add" className="text-[15px]" />
-          </button>
-
           {/* Notifications */}
           <button
             type="button"
@@ -189,7 +184,6 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#3f4348] transition hover:bg-[#f5f7f9]"
                   >
                     <Icon name="person" className="text-[17px]" />
-
                     <span>Profile</span>
                   </button>
 
@@ -200,7 +194,6 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#3f4348] transition hover:bg-[#f5f7f9]"
                   >
                     <Icon name="settings" className="text-[17px]" />
-
                     <span>Account Settings</span>
                   </button>
                 </div>
@@ -213,7 +206,6 @@ export default function Navbar({ setMobileMenuOpen }: NavbarProps) {
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-[#dc2626] transition hover:bg-[#fef2f2]"
                   >
                     <Icon name="logout" className="text-[17px]" />
-
                     <span>Logout</span>
                   </button>
                 </div>

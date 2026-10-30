@@ -67,8 +67,7 @@ export default function VendorLayout({
           {/* Navbar */}
           <Navbar setMobileMenuOpen={setMobileMenuOpen} />
 
-          {/* Toolbar ONLY on dashboard */}
-          {isDashboard && <DashboardToolbar />}
+          
 
           {/* Page Content */}
           <div className="min-h-0 flex-1 overflow-y-auto bg-white">
