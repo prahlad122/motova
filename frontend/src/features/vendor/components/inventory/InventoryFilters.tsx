@@ -31,7 +31,7 @@ export default function InventoryFilters({
   brands,
 }: InventoryFiltersProps) {
   return (
-    <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_170px_170px]">
+    <div className="text-black  mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_170px_170px_170px]">
       <input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
@@ -42,7 +42,7 @@ export default function InventoryFilters({
       <select
         value={categoryFilter}
         onChange={(event) => onCategoryChange(event.target.value)}
-        className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm"
+        className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm text-black"
       >
         <option value="ALL">All categories</option>
 
