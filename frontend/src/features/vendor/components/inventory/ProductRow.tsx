@@ -85,7 +85,7 @@ export default function ProductRow({ product }: ProductRowProps) {
         {product.brand?.name ?? "—"}
       </td>
 
-      <td className="px-4 py-3 font-medium">
+      <td className="px-4 py-3 font-medium text-black">
         {money(product.price)}
 
         {product.compareAtPrice !== null && (

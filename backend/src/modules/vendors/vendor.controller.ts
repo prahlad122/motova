@@ -1,7 +1,7 @@
 
 import type { Request, Response, NextFunction } from "express";
 import { UserRole } from "../../generated/prisma/client.js";
-import { getVendorDashboardStats } from "./vendor.service.js";
+import { getVendorDashboardStats, listSelectableCategories } from "./vendor.service.js";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -63,4 +63,11 @@ export async function getVendorDashboard(
 
     next(error);
   }
+}
+
+export async function getVendorCategories(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user || req.user.role !== UserRole.VENDOR) return res.status(403).json({ success: false, message: "Vendor access required." });
+    return res.status(200).json({ success: true, data: await listSelectableCategories() });
+  } catch (error) { return next(error); }
 }

@@ -25,7 +25,7 @@ export default function InventoryHeader({
         <button
           type="button"
           onClick={onImportCSV}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium"
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-black font-medium"
         >
           Import CSV
         </button>

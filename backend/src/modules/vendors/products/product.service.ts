@@ -86,13 +86,15 @@ export async function createVendorProduct(
     where: {
       id: input.categoryId,
       isActive: true,
+      parentId: { not: null },
+      parent: { is: { isActive: true, parentId: null } },
     },
     select: { id: true },
   });
 
   if (!category) {
     throw Object.assign(
-      new Error("The selected category does not exist or is inactive."),
+      new Error("Select an active subcategory under an active parent category."),
       { statusCode: 400 },
     );
   }

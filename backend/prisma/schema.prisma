@@ -28,6 +28,7 @@ enum VendorVerificationStatus {
 
 enum VendorDocumentType {
   GST_CERTIFICATE
+  PAN_CARD
   BUSINESS_LICENSE
   IDENTITY_PROOF
   ADDRESS_PROOF
@@ -117,10 +118,12 @@ model User {
   email        String?    @unique
   mobile       String?    @unique
   passwordHash String
+  mobileOtps MobileOtp[]
   role         UserRole
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  mustChangePassword Boolean @default(false)
 
   vendorProfile              VendorProfile?
   customerProfile            CustomerProfile?
@@ -150,6 +153,11 @@ model VendorProfile {
   verifiedAt          DateTime?
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt
+  gstNumber           String?  @unique
+  shippingAddress     String?  @db.Text
+  storeManager        String?
+  authorizedPerson    String?
+  mobileVerified      Boolean  @default(false)
 
   user               User                @relation(fields: [userId], references: [id], onDelete: Restrict)
   documents          VendorDocument[]
@@ -162,21 +170,35 @@ model VendorProfile {
   @@index([businessName])
 }
 
+
+
 model VendorDocument {
   id              String             @id @default(uuid())
   vendorProfileId String
+
   type            VendorDocumentType
+
+  // Object storage metadata (Cloudflare R2)
   fileName        String
   fileUrl         String
   storageKey      String?
+  mimeType        String?
+  fileSize        Int?
+
+  // Latest review status
   status          ReviewStatus       @default(PENDING)
+  rejectionReason String?            @db.Text
+  reviewedAt      DateTime?
+
   submittedAt     DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  vendor  VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
-  reviews DocumentReview[]
+  vendor          VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
+  reviews         DocumentReview[]
 
   @@index([vendorProfileId, status])
+  @@index([vendorProfileId, type])
+  @@index([type, status])
 }
 
 model DocumentReview {
@@ -193,6 +215,28 @@ model DocumentReview {
   @@index([documentId, reviewedAt])
   @@index([reviewerId])
 }
+
+
+
+model MobileOtp {
+  id          String   @id @default(uuid())
+  userId      String
+
+  otpHash     String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  lastSentAt  DateTime?
+  verifiedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 
 model CustomerProfile {
   id          String   @id @default(uuid())
@@ -243,6 +287,8 @@ model Category {
   isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  image     String?
+  sortOrder Int     @default(0)
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children Category[] @relation("CategoryTree")

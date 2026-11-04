@@ -5,6 +5,7 @@ import { getAuthSession } from "@/features/auth/auth.utils";
 import type {
   Product,
   CreateProductInput,
+  Category,
 } from "./inventory.types";
 
 const API_URL =
@@ -38,6 +39,11 @@ export async function getVendorProducts(): Promise<Product[]> {
   }
 
   return parseApiResponse<Product[]>(response);
+}
+
+export async function getVendorCategories(): Promise<Category[]> {
+  const response = await fetch(`${API_URL}/vendor/categories`, { headers: getAuthHeaders(), cache: "no-store" });
+  return parseApiResponse<Category[]>(response);
 }
 
 export async function createVendorProduct(

@@ -22,8 +22,6 @@
 //   try {
 //     return JSON.parse(storedSession) as AuthResponse;
 //   } catch (error) {
-//     console.error("Failed to parse auth session:", error);
-
 //     return null;
 //   }
 // }
@@ -78,8 +76,7 @@ export function getAuthSession(
     }
     
     return session;
-  } catch (error) {
-    console.error("Failed to parse auth session" , error);
+  } catch {
     return null;
     
   }

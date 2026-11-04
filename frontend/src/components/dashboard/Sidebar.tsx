@@ -10,6 +10,7 @@ export type NavigationItem = {
   label: string;
   href: string;
   icon: string;
+  children?: { label: string; href: string }[];
 };
 
 type SidebarProps = {
@@ -78,25 +79,21 @@ export default function Sidebar({
                 : pathname.startsWith(item.href);
 
             return (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`group relative flex h-[42px] items-center gap-3 px-4 text-[12px] font-medium transition-colors ${isActive ? "bg-[#22252a] text-white" : "text-[#d1d3d6] hover:bg-[#202328] hover:text-white"}`}
-              >
-                {/* Active Indicator */}
-                {isActive && (
-                  <span className="absolute right-0 top-0 h-full w-[2px] bg-[#3984ff]" />
-                )}
-
-                <Icon
-                  name={item.icon}
-                  filled={isActive}
-                  className={`text-[18px] ${isActive ? "text-[#3984ff]" : "text-[#c9ccd0] group-hover:text-white"}`}
-                />
-
-                <span>{item.label}</span>
-              </Link>
+              <div key={item.label}>
+                <Link
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`group relative flex h-[42px] items-center gap-3 px-4 text-[12px] font-medium transition-colors ${isActive ? "bg-[#22252a] text-white" : "text-[#d1d3d6] hover:bg-[#202328] hover:text-white"}`}
+                >
+                  {isActive && <span className="absolute right-0 top-0 h-full w-[2px] bg-[#3984ff]" />}
+                  <Icon name={item.icon} filled={isActive} className={`text-[18px] ${isActive ? "text-[#3984ff]" : "text-[#c9ccd0] group-hover:text-white"}`} />
+                  <span>{item.label}</span>
+                </Link>
+                {isActive && item.children?.map((child) => {
+                  const childActive = pathname === child.href;
+                  return <Link key={child.href} href={child.href} onClick={() => setMobileMenuOpen(false)} className={`block truncate py-2 pl-[46px] pr-3 text-[11px] transition-colors ${childActive ? "font-semibold text-white" : "text-[#aeb4bd] hover:text-white"}`}>{child.label}</Link>;
+                })}
+              </div>
             );
           })}
         </nav>
