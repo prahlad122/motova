@@ -30,10 +30,7 @@ pnpm-debug.log*
 /.postman/
 
 # Local backend configuration and scratch files
-/backend/src/config/cloudinary.ts
-/backend/src/config/r2.ts
-/backend/src/config/swagger.js
-/backend/src/config/swagger.ts
+ 
 /backend/ANALYTICS_API_TESTING.txt
 /backend/CATEGORY_API_TESTING.txt
 /backend/CORRECTED_UPLOAD_MIDDLEWARE.ts
