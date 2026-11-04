@@ -1,358 +1,358 @@
+import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 
 import { prisma } from "../../config/database.js";
+
 import {
+  Prisma,
   UserRole,
   UserStatus,
-  ProductStatus,
+  VendorVerificationStatus,
 } from "../../generated/prisma/client.js";
 
-export async function getAdminDashboardStats() {
-  const now = new Date();
+import type { CreateVendorInput } from "./admin.types.js";
+import type { GetVendorsQuery } from "./admin.types.js";
 
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+export async function createVendorByAdmin(input: CreateVendorInput) {
+  const {
+    name,
+    email,
+    mobile,
+    businessName,
+    gstNumber,
+    businessAddress,
+    shippingAddress,
+    storeManager,
+    authorizedPerson,
+  } = input;
 
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-  thirtyDaysAgo.setHours(0, 0, 0, 0);
+  // Normalize input values
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedMobile = mobile.trim();
+  const normalizedGst = gstNumber?.trim().toUpperCase() || null;
 
-  const [
-    totalVendors,
-    activeVendors,
-    pendingVendors,
-    suspendedVendors,
-    newVendorsThisWeek,
-    totalProducts,
-    activeProducts,
-    pendingProducts,
-    rejectedProducts,
-    inactiveProducts,
-    newProductsThisWeek,
-    lowStockProducts,
-    productsOutOfStock,
-    recentVendorOrders,
-    pendingApprovalProducts,
-    vendorProfiles,
-  ] = await Promise.all([
-    prisma.user.count({
-      where: { role: UserRole.VENDOR },
-    }),
-
-    prisma.user.count({
-      where: {
-        role: UserRole.VENDOR,
-        status: UserStatus.ACTIVE,
-      },
-    }),
-
-    prisma.user.count({
-      where: {
-        role: UserRole.VENDOR,
-        status: UserStatus.PENDING,
-      },
-    }),
-
-    prisma.user.count({
-      where: {
-        role: UserRole.VENDOR,
-        status: UserStatus.SUSPENDED,
-      },
-    }),
-
-    prisma.user.count({
-      where: {
-        role: UserRole.VENDOR,
-        createdAt: { gte: sevenDaysAgo, lte: now },
-      },
-    }),
-
-    prisma.product.count(),
-
-    prisma.product.count({
-      where: {
-        status: ProductStatus.ACTIVE,
-        listingStatus: "APPROVED",
-      },
-    }),
-
-    prisma.product.count({
-      where: { listingStatus: "PENDING" },
-    }),
-
-    prisma.product.count({
-      where: { listingStatus: "REJECTED" },
-    }),
-
-    prisma.product.count({
-      where: {
-        status: {
-          in: [ProductStatus.INACTIVE, ProductStatus.ARCHIVED],
-        },
-      },
-    }),
-
-    prisma.product.count({
-      where: {
-        createdAt: { gte: sevenDaysAgo, lte: now },
-      },
-    }),
-
-    prisma.product.count({
-      where: {
-        stockQuantity: { gt: 0, lte: 5 },
-        status: { not: ProductStatus.ARCHIVED },
-      },
-    }),
-
-    prisma.product.count({
-      where: { stockQuantity: 0 },
-    }),
-
-    prisma.vendorOrder.findMany({
-      where: {
-        createdAt: { gte: thirtyDaysAgo, lte: now },
-      },
-      select: {
-        status: true,
-        vendorProfileId: true,
-        vendorAmount: true,
-        createdAt: true,
-        items: {
-          select: { quantity: true },
-        },
-        vendor: {
-          select: { businessName: true },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    }),
-
-    prisma.product.findMany({
-      where: { listingStatus: "PENDING" },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        vendor: {
-          select: { businessName: true },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-      take: 5,
-    }),
-
-    prisma.vendorProfile.findMany({
-      select: { id: true },
-    }),
-  ]);
-
-  const revenueByDate = new Map<string, number>();
-
-  const revenueByVendor = new Map<
-    string,
-    { businessName: string; revenue: number }
-  >();
-
-  let revenue = 0;
-  let unitsSold = 0;
-
-  for (const order of recentVendorOrders) {
-    if (order.status !== "DELIVERED") continue;
-
-    const amount = Number(order.vendorAmount);
-    const date = order.createdAt.toISOString().slice(0, 10);
-
-    revenue += amount;
-
-    unitsSold += order.items.reduce(
-      (total, item) => total + item.quantity,
-      0,
-    );
-
-    revenueByDate.set(
-      date,
-      (revenueByDate.get(date) ?? 0) + amount,
-    );
-
-    const existing = revenueByVendor.get(order.vendorProfileId);
-
-    revenueByVendor.set(order.vendorProfileId, {
-      businessName: order.vendor.businessName ?? "Unnamed vendor",
-      revenue: (existing?.revenue ?? 0) + amount,
-    });
-  }
-
-  const series = Array.from({ length: 30 }, (_, index) => {
-    const date = new Date(thirtyDaysAgo);
-    date.setDate(date.getDate() + index);
-
-    const dateKey = date.toISOString().slice(0, 10);
-
-    return {
-      date: dateKey,
-      revenue: revenueByDate.get(dateKey) ?? 0,
-    };
-  });
-
-  const topVendors = Array.from(revenueByVendor.entries())
-    .map(([vendorId, data]) => ({
-      vendorId,
-      businessName: data.businessName,
-      revenue: data.revenue,
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5);
-
-  const vendorsWithOrders = new Set(
-    recentVendorOrders
-      .filter((order) =>
-        ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"].includes(
-          order.status,
-        ),
-      )
-      .map((order) => order.vendorProfileId),
-  );
-
-  return {
-    vendors: {
-      total: totalVendors,
-      active: activeVendors,
-      pending: pendingVendors,
-      suspended: suspendedVendors,
-      newThisWeek: newVendorsThisWeek,
-    },
-
-    listings: {
-      total: totalProducts,
-      active: activeProducts,
-      pending: pendingProducts,
-      hidden: inactiveProducts,
-      rejected: rejectedProducts,
-      newThisWeek: newProductsThisWeek,
-    },
-
-    sales: {
-      revenue,
-      target: 0,
-      unitsSold,
-      previousPeriodChangePercent: null,
-      series,
-    },
-
-    topVendors,
-
-    attention: {
-      lowStockListings: lowStockProducts,
-      vendorsWithoutSalesLast30Days: vendorProfiles.filter(
-        (vendor) => !vendorsWithOrders.has(vendor.id),
-      ).length,
-      rejectedListings: rejectedProducts,
-      expiringDocuments: 0,
-      reportedListings: 0,
-    },
-
-    approvalQueue: pendingApprovalProducts.map((product) => ({
-      productId: product.id,
-      productName: product.name,
-      businessName: product.vendor.businessName ?? "Unnamed vendor",
-      submittedAt: product.createdAt.toISOString(),
-    })),
-
-    salesByCategory: [],
-  };
-}
-
-
-export async function getPendingProductApprovals() {
-  const products = await prisma.product.findMany({
-    where: {
-      listingStatus: "PENDING",
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      price: true,
-      stockQuantity: true,
-      createdAt: true,
-      vendor: {
-        select: {
-          id: true,
-          businessName: true,
-        },
-      },
-      category: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-
-  return products;
-}
-
-export async function reviewProductListing(
-  productId: string,
-  reviewerId: string,
-  decision: "APPROVED" | "REJECTED",
-  note?: string,
-) {
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: {
-      id: true,
-      listingStatus: true,
-    },
-  });
-
-  if (!product) {
-    throw Object.assign(new Error("Product not found."), {
-      statusCode: 404,
-    });
-  }
-
-  if (product.listingStatus !== "PENDING") {
+  // Validate required fields
+  if (
+    !name.trim() ||
+    !normalizedEmail ||
+    !normalizedMobile ||
+    !businessName.trim() ||
+    !businessAddress.trim()
+  ) {
     throw Object.assign(
-      new Error("This product has already been reviewed."),
-      { statusCode: 409 },
-    );
-  }
-
-  if (decision === "REJECTED" && !note?.trim()) {
-    throw Object.assign(
-      new Error("A rejection reason is required."),
+      new Error("Please provide all required vendor details."),
       { statusCode: 400 },
     );
   }
 
-  return prisma.$transaction(async (tx) => {
-    const updatedProduct = await tx.product.update({
-      where: { id: productId },
-      data: {
-        listingStatus: decision,
-        ...(decision === "APPROVED"
-          ? { status: "ACTIVE" as const, approvedAt: new Date() }
-          : { listingNote: note!.trim() }),
+  // Check duplicate email or mobile
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: normalizedEmail }, { mobile: normalizedMobile }],
+    },
+    select: {
+      id: true,
+      email: true,
+      mobile: true,
+    },
+  });
+
+  if (existingUser) {
+    throw Object.assign(
+      new Error("A user with this email or mobile number already exists."),
+      { statusCode: 409 },
+    );
+  }
+
+  // Check duplicate GST number
+  if (normalizedGst) {
+    const existingVendor = await prisma.vendorProfile.findUnique({
+      where: {
+        gstNumber: normalizedGst,
+      },
+      select: {
+        id: true,
       },
     });
 
-   
-await tx.listingReview.create({
-  data: {
-    productId,
-    reviewerId,
-    status: decision,
-    note: note?.trim() || null,
-  },
-});
+    if (existingVendor) {
+      throw Object.assign(
+        new Error("A vendor with this GST number already exists."),
+        { statusCode: 409 },
+      );
+    }
+  }
 
+  // Generate temporary password
+  const temporaryPassword = `${randomBytes(18).toString("base64url")}A1!`;
 
-    return updatedProduct;
-  });
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+
+  try {
+    // Create user and vendor profile together
+    const vendor = await prisma.$transaction(async (tx) => {
+      return tx.user.create({
+        data: {
+          name: name.trim(),
+          email: normalizedEmail,
+          mobile: normalizedMobile,
+          passwordHash,
+          role: UserRole.VENDOR,
+          status: UserStatus.PENDING,
+          mustChangePassword: false,
+
+          vendorProfile: {
+            create: {
+              businessName: businessName.trim(),
+              gstNumber: normalizedGst,
+              businessAddress: businessAddress.trim(),
+              shippingAddress: shippingAddress?.trim() || null,
+              storeManager: storeManager?.trim() || null,
+              authorizedPerson: authorizedPerson?.trim() || null,
+
+              mobileVerified: false,
+              verificationStatus: VendorVerificationStatus.NOT_SUBMITTED,
+            },
+          },
+        },
+
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          mobile: true,
+          role: true,
+          status: true,
+          mustChangePassword: true,
+          createdAt: true,
+
+          vendorProfile: {
+            select: {
+              id: true,
+              businessName: true,
+              gstNumber: true,
+              mobileVerified: true,
+              verificationStatus: true,
+            },
+          },
+        },
+      });
+    });
+
+    // Return temporary password only once to the admin
+    return {
+      vendor,
+      temporaryPassword,
+    };
+  } catch (error) {
+    // Handle unique constraint conflicts
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw Object.assign(
+        new Error("Email, mobile number, or GST number already exists."),
+        { statusCode: 409 },
+      );
+    }
+
+    throw error;
+  }
 }
 
+// Get all vendors with search, filters and pagination
+export async function getAdminVendors(query: GetVendorsQuery) {
+  const { search, status, verificationStatus, page, limit } = query;
+
+  const skip = (page - 1) * limit;
+
+  const where: Prisma.UserWhereInput = {
+    role: UserRole.VENDOR,
+
+    ...(status && {
+      status: status as UserStatus,
+    }),
+
+    ...(verificationStatus && {
+      vendorProfile: {
+        is: {
+          verificationStatus: verificationStatus as VendorVerificationStatus,
+        },
+      },
+    }),
+
+    ...(search && {
+      OR: [
+        {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          mobile: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          vendorProfile: {
+            is: {
+              businessName: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      ],
+    }),
+  };
+
+  const [vendors, totalVendors] = await prisma.$transaction([
+    prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        mobile: true,
+        status: true,
+        createdAt: true,
+
+        vendorProfile: {
+          select: {
+            id: true,
+            businessName: true,
+            gstNumber: true,
+            mobileVerified: true,
+            verificationStatus: true,
+          },
+        },
+      },
+    }),
+
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    vendors,
+    pagination: {
+      currentPage: page,
+      pageSize: limit,
+      totalVendors,
+      totalPages: Math.ceil(totalVendors / limit),
+      hasNextPage: page * limit < totalVendors,
+      hasPreviousPage: page > 1,
+    },
+  };
+}
+
+
+//Get a indivisual vendor details 
+
+export async function getAdminVendorById(vendorId: string) {
+  const vendor = await prisma.user.findFirst({
+    where: {
+      id: vendorId,
+      role: UserRole.VENDOR,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      mobile: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+
+      vendorProfile: {
+        select: {
+          id: true,
+          businessName: true,
+          gstNumber: true,
+          businessAddress: true,
+          shippingAddress: true,
+          storeManager: true,
+          authorizedPerson: true,
+          mobileVerified: true,
+          verificationStatus: true,
+          verificationNote: true,
+          verifiedAt: true,
+          documents: {
+            select: {
+              id: true,
+              type: true,
+              fileName: true,
+              mimeType: true,
+              fileSize: true,
+              status: true,
+              rejectionReason: true,
+              submittedAt: true,
+            },
+            orderBy: { submittedAt: "desc" },
+          },
+        },
+      },
+    },
+  });
+
+  return vendor;
+}
+
+//Update vendor account status
+
+export async function updateAdminVendorStatus(
+  vendorId: string,
+  status: "ACTIVE" | "SUSPENDED",
+) {
+  const updateResult = await prisma.user.updateMany({
+    where: {
+      id: vendorId,
+      role: UserRole.VENDOR,
+    },
+    data: {
+      status,
+    },
+  });
+
+  if (updateResult.count === 0) {
+    return null;
+  }
+
+  return prisma.user.findFirst({
+    where: {
+      id: vendorId,
+      role: UserRole.VENDOR,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      mobile: true,
+      role: true,
+      status: true,
+      updatedAt: true,
+      vendorProfile: {
+        select: {
+          businessName: true,
+          verificationStatus: true,
+        },
+      },
+    },
+  });
+}

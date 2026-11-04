@@ -3,6 +3,14 @@ import { OrderStatus, ProductStatus } from "../../generated/prisma/client.js";
 
 const LOW_STOCK_THRESHOLD = 5;
 
+export async function listSelectableCategories() {
+  return prisma.category.findMany({
+    where: { isActive: true, parentId: { not: null }, parent: { is: { isActive: true, parentId: null } } },
+    select: { id: true, name: true, parent: { select: { id: true, name: true } } },
+    orderBy: [{ parent: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+  });
+}
+
 function startOfLocalDay(date: Date) {
   const value = new Date(date);
   value.setHours(0, 0, 0, 0);

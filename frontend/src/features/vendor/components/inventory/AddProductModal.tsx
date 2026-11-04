@@ -31,6 +31,11 @@ export default function AddProductModal({
   onSubmit,
 }: AddProductModalProps) {
   if (!open) return null;
+  const selectedCategory = categories.find((category) => category.id === form.categoryId);
+  const selectedParentId = selectedCategory?.parent?.id ?? "";
+  const parentCategories = categories
+    .flatMap((category) => category.parent ? [category.parent] : [])
+    .filter((parent, index, all) => all.findIndex((item) => item.id === parent.id) === index);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
@@ -83,24 +88,39 @@ export default function AddProductModal({
             </label>
 
             <label className="text-sm font-medium text-gray-700">
-              Category *
+              Parent category *
               <select
                 required
-                value={form.categoryId}
-                onChange={(event) =>
-                  onChange("categoryId", event.target.value)
-                }
+                value={selectedParentId}
+                onChange={(event) => {
+                  const firstSubcategory = categories.find((category) => category.parent?.id === event.target.value);
+                  onChange("categoryId", firstSubcategory?.id ?? "");
+                }}
                 className="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 font-normal"
               >
-                <option value="">Select category</option>
-
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
+                <option value="">Select parent category</option>
+                {parentCategories.map((parent) => (
+                  <option key={parent.id} value={parent.id}>
+                    {parent.name}
                   </option>
                 ))}
               </select>
+            </label>
 
+            <label className="text-sm font-medium text-gray-700">
+              Subcategory *
+              <select
+                required
+                disabled={!selectedParentId}
+                value={form.categoryId}
+                onChange={(event) => onChange("categoryId", event.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 font-normal disabled:bg-gray-50"
+              >
+                <option value="">Select subcategory</option>
+                {categories.filter((category) => category.parent?.id === selectedParentId).map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
               {categories.length === 0 && (
                 <span className="mt-1 block text-xs text-amber-700">
                   No categories are currently available. Please contact the

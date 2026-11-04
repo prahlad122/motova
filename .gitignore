@@ -20,6 +20,43 @@ npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
+# Documentation and local agent notes
+*.md
+*.markdown
+*.mdx
+
+# Postman workspace files
+/postman/
+/.postman/
+
+# Local backend configuration and scratch files
+/backend/src/config/cloudinary.ts
+/backend/src/config/r2.ts
+/backend/src/config/swagger.js
+/backend/src/config/swagger.ts
+/backend/ANALYTICS_API_TESTING.txt
+/backend/CATEGORY_API_TESTING.txt
+/backend/CORRECTED_UPLOAD_MIDDLEWARE.ts
+/backend/PRODUCTS_API_TESTING.txt
+
+# Tests and local verification artifacts
+**/__tests__/
+**/tests/
+**/test/
+**/*.test.*
+**/*.spec.*
+**/test.*
+**/tests.*
+**/test-*
+**/*-test.*
+**/*-tests.*
+**/*_tests.*
+run-*-tests.*
+**/test_*
+**/*_test.*
+**/coverage/
+backend/test-doc.pdf
+
 # OS
 .DS_Store
 Thumbs.db

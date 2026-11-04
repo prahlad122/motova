@@ -18,9 +18,7 @@ router.get("/db", async (_req, res) => {
       success: true,
       message: "Database connected successfully",
     });
-  } catch (error) {
-    console.error("Database health check failed:", error);
-
+  } catch {
     res.status(500).json({
       success: false,
       message: "Database connection failed",

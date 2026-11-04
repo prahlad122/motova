@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   createVendorProduct,
+  getVendorCategories,
   getVendorProducts,
 } from "../inventory/inventory.api";
 
@@ -39,6 +40,7 @@ function productStatus(product: Product): ProductTab | string {
 
 export function useVendorInventory() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -67,6 +69,7 @@ export function useVendorInventory() {
       setLoading(true);
       setError("");
       await loadProducts();
+      setAvailableCategories(await getVendorCategories());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load products.");
     } finally {
@@ -75,7 +78,8 @@ export function useVendorInventory() {
   }, [loadProducts]);
 
   useEffect(() => {
-    void refreshProducts();
+    const timer = window.setTimeout(() => { void refreshProducts(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [refreshProducts]);
 
   const counts = useMemo<InventoryCounts>(() => {
@@ -97,15 +101,7 @@ export function useVendorInventory() {
     return result;
   }, [products]);
 
-  const categories = useMemo<Category[]>(() => {
-    const categoryMap = new Map<string, Category>();
-
-    for (const product of products) {
-      categoryMap.set(product.category.id, product.category);
-    }
-
-    return [...categoryMap.values()];
-  }, [products]);
+  const categories = availableCategories;
 
   const brands = useMemo<Brand[]>(() => {
     const brandMap = new Map<string, Brand>();

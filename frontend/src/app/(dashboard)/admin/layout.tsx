@@ -2,49 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
-import Sidebar, { type NavigationItem } from "@/components/dashboard/Sidebar";
-
+import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
 import DashboardToolbar from "@/components/dashboard/DashboardToolbar";
-
-const adminNavigation: NavigationItem[] = [
-  {
-    label: "Dashboard",
-    href: "/admin/dashboard",
-    icon: "Dashboard",
-  },
-  {
-    label: "Vendors",
-    href: "/admin/vendors",
-    icon: "Storefront",
-  },
-  {
-    label: "Category",
-    href: "/admin/category",
-    icon: "Category",
-  },
-  {
-    label: "Brands & Items",
-    href: "/admin/brands-items",
-    icon: "List_Alt",
-  },
-  {
-    label: "Analytics",
-    href: "/admin/analytics",
-    icon: "Bar_Chart",
-  },
-  {
-    label: "Approvals",
-    href: "/admin/approvals",
-    icon: "Order_Approve",
-  },
-  {
-    label: "Documentation",
-    href: "/admin/documentation",
-    icon: "Assignment",
-  },
-];
+import { adminNavigation } from "@/features/admin/admin.navigation";
+ 
 export default function AdminLayout({
   children,
 }: {

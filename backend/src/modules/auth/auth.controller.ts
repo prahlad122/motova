@@ -1,5 +1,5 @@
 
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 import {
   registerVendor,
@@ -7,6 +7,8 @@ import {
   loginAdmin,
 } from "./auth.service";
 
+import type { AuthenticatedRequest } from "../../middlewares/auth.middleware.js";
+import { changeVendorPassword } from "./auth.service.js";
 export async function vendorRegister(
   req: Request,
   res: Response,
@@ -14,9 +16,7 @@ export async function vendorRegister(
   try {
     const result = await registerVendor(req.body);
     return res.status(result.status).json(result.body);
-  } catch (error) {
-    console.error("Vendor registration error:", error);
-
+  } catch {
     return res.status(500).json({
       success: false,
       message: "Something went wrong while registering vendor",
@@ -31,9 +31,7 @@ export async function vendorLogin(
   try {
     const result = await loginVendor(req.body);
     return res.status(result.status).json(result.body);
-  } catch (error) {
-    console.error("Vendor login error:", error);
-
+  } catch {
     return res.status(500).json({
       success: false,
       message: "Something went wrong while logging in",
@@ -48,12 +46,35 @@ export async function adminLogin(
   try {
     const result = await loginAdmin(req.body);
     return res.status(result.status).json(result.body);
-  } catch (error) {
-    console.error("Admin login error:", error);
-
+  } catch {
     return res.status(500).json({
       success: false,
       message: "Something went wrong while logging in",
     });
+  }
+}
+
+
+export async function changeVendorPasswordController(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const result = await changeVendorPassword(
+      req.user.userId,
+      req.body,
+    );
+
+    return res.status(result.status).json(result.body);
+  } catch (error) {
+    next(error);
   }
 }

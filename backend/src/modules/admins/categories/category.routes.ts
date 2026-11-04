@@ -1,0 +1,13 @@
+import { Router } from "express";
+import { getCategories, getCategoriesStats, getCategoryById, patchCategory, patchCategoryStatus, postCategory, postCategoryImage, removeCategory } from "./category.controller.js";
+import { uploadCategoryImageFile } from "./category-image.middleware.js";
+const router = Router();
+router.get("/stats", getCategoriesStats);
+router.post("/image", uploadCategoryImageFile, postCategoryImage);
+router.get("/", getCategories);
+router.post("/", postCategory);
+router.get("/:categoryId", getCategoryById);
+router.patch("/:categoryId/status", patchCategoryStatus);
+router.patch("/:categoryId", patchCategory);
+router.delete("/:categoryId", removeCategory);
+export default router;
