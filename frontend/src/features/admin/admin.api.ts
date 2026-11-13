@@ -101,11 +101,16 @@ export async function fetchAdminVendors(
     page: String(params.page),
     limit: String(params.limit),
   });
+
   if (params.search) query.set("search", params.search);
   if (params.status) query.set("status", params.status);
-  if (params.verificationStatus)
+
+  if (params.verificationStatus) {
     query.set("verificationStatus", params.verificationStatus);
+  }
+
   let response: Response;
+
   try {
     response = await fetch(`${API_URL}/admin/vendors?${query}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -116,13 +121,23 @@ export async function fetchAdminVendors(
       cause: error,
     });
   }
+
   const envelope = (await response.clone().json()) as {
     pagination?: AdminVendorsResponse["pagination"];
+    stats?: AdminVendorsResponse["stats"];
   };
+
   const vendors = await parseApiResponse<AdminVendor[]>(response);
-  if (!envelope.pagination)
-    throw new Error("The server returned invalid vendor pagination.");
-  return { vendors, pagination: envelope.pagination };
+
+  if (!envelope.pagination || !envelope.stats) {
+    throw new Error("The server returned invalid vendor data.");
+  }
+
+  return {
+    vendors,
+    pagination: envelope.pagination,
+    stats: envelope.stats,
+  };
 }
 
 export function getAdminVendor(token: string, vendorId: string) {

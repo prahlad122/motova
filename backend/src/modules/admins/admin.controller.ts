@@ -8,7 +8,6 @@ import {  createVendorByAdmin,  getAdminVendors, getAdminVendorById, updateAdmin
 import { getVendorsQuerySchema, updateVendorStatusSchema, } from "./admin.validation.js";
 import { UserStatus } from "../../generated/prisma/client.js";
 
-
 export async function getAdminDashboard(
   _req: Request,
   res: Response,
@@ -45,6 +44,7 @@ export async function createVendor(
   }
 }
 
+
 export async function getVendors(
   req: Request,
   res: Response,
@@ -70,12 +70,14 @@ export async function getVendors(
       success: true,
       message: "Vendors fetched successfully.",
       data: result.vendors,
+      stats: result.stats,
       pagination: result.pagination,
     });
   } catch (error) {
     next(error);
   }
 }
+
 
 // GET vendor details
 export async function getVendorById(

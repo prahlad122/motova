@@ -57,3 +57,14 @@ backend/test-doc.pdf
 # OS
 .DS_Store
 Thumbs.db
+
+# Keep the runnable Motova Postman artifacts in version control
+!/postman/
+/postman/*
+!/postman/collections/
+/postman/collections/*
+!/postman/collections/Motova_API.postman_collection.json
+!/postman/environments/
+/postman/environments/*
+!/postman/environments/Motova_Run_All.postman_environment.json
+/postman/skills/

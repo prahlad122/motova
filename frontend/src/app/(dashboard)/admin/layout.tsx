@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -6,7 +7,7 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import Navbar from "@/components/dashboard/Navbar";
 import DashboardToolbar from "@/components/dashboard/DashboardToolbar";
 import { adminNavigation } from "@/features/admin/admin.navigation";
- 
+
 export default function AdminLayout({
   children,
 }: {
@@ -15,33 +16,32 @@ export default function AdminLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const pathname = usePathname();
-
   const isDashboard = pathname === "/admin/dashboard";
 
   return (
-    <main className="min-h-screen w-full overflow-hidden bg-white">
-      <div className="flex h-screen overflow-hidden bg-[#f8f9fb]">
-        {/* Sidebar */}
-        <Sidebar
-          navigation={adminNavigation}
-          mobileMenuOpen={mobileMenuOpen}
-          setMobileMenuOpen={setMobileMenuOpen}
-        />
+    <div className="flex h-dvh w-full overflow-hidden bg-[#f8f9fb]">
+      {/* Sidebar */}
+      <Sidebar
+        navigation={adminNavigation}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+      />
 
-        {/* Main Content */}
-        <section className="flex min-w-0 flex-1 flex-col bg-white">
-          {/* Navbar */}
-          <Navbar setMobileMenuOpen={setMobileMenuOpen} />
+      {/* Main Content */}
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#f8f9fb]">
+        {/* Navbar */}
+        <Navbar setMobileMenuOpen={setMobileMenuOpen} />
 
-          {/* Toolbar ONLY on Dashboard */}
-          {isDashboard && <DashboardToolbar />}
+        {/* Toolbar ONLY on Dashboard */}
+        {isDashboard && <DashboardToolbar />}
 
-          {/* Page Content */}
-          <div className="min-h-0 flex-1 overflow-y-auto bg-white">
+        {/* Scrollable Page Content */}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="min-h-full">
             {children}
           </div>
-        </section>
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
   );
 }

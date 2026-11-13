@@ -163,6 +163,9 @@ export async function createVendorByAdmin(input: CreateVendorInput) {
 }
 
 // Get all vendors with search, filters and pagination
+
+
+
 export async function getAdminVendors(query: GetVendorsQuery) {
   const { search, status, verificationStatus, page, limit } = query;
 
@@ -178,7 +181,8 @@ export async function getAdminVendors(query: GetVendorsQuery) {
     ...(verificationStatus && {
       vendorProfile: {
         is: {
-          verificationStatus: verificationStatus as VendorVerificationStatus,
+          verificationStatus:
+            verificationStatus as VendorVerificationStatus,
         },
       },
     }),
@@ -217,7 +221,15 @@ export async function getAdminVendors(query: GetVendorsQuery) {
     }),
   };
 
-  const [vendors, totalVendors] = await prisma.$transaction([
+  const [
+    vendors,
+    totalVendors,
+    total,
+    active,
+    pending,
+    profiles,
+  ] = await prisma.$transaction([
+    // 1. Paginated vendor records
     prisma.user.findMany({
       where,
       skip,
@@ -232,7 +244,6 @@ export async function getAdminVendors(query: GetVendorsQuery) {
         mobile: true,
         status: true,
         createdAt: true,
-
         vendorProfile: {
           select: {
             id: true,
@@ -245,11 +256,46 @@ export async function getAdminVendors(query: GetVendorsQuery) {
       },
     }),
 
+    // 2. Filtered count for pagination
     prisma.user.count({ where }),
+
+    // 3. Total vendors across marketplace
+    prisma.user.count({
+      where: {
+        role: UserRole.VENDOR,
+      },
+    }),
+
+    // 4. Active vendors across marketplace
+    prisma.user.count({
+      where: {
+        role: UserRole.VENDOR,
+        status: UserStatus.ACTIVE,
+      },
+    }),
+
+    // 5. Pending vendors across marketplace
+    prisma.user.count({
+      where: {
+        role: UserRole.VENDOR,
+        status: UserStatus.PENDING,
+      },
+    }),
+
+    // 6. Total vendor profiles
+    prisma.vendorProfile.count(),
   ]);
 
   return {
     vendors,
+
+    stats: {
+      total,
+      active,
+      pending,
+      profiles,
+    },
+
     pagination: {
       currentPage: page,
       pageSize: limit,
@@ -262,7 +308,8 @@ export async function getAdminVendors(query: GetVendorsQuery) {
 }
 
 
-//Get a indivisual vendor details 
+
+//Get a indivisual vendor details
 
 export async function getAdminVendorById(vendorId: string) {
   const vendor = await prisma.user.findFirst({
