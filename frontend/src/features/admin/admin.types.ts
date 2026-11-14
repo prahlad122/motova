@@ -14,6 +14,13 @@ export interface AdminDashboardStats {
   salesByCategory: { categoryId: string; categoryName: string; revenue: number }[];
 }
 
+export interface AdminVendorStats {
+  total: number;
+  active: number;
+  pending: number;
+  profiles: number;
+} 
+
 export interface AdminVendor {
   id: string;
   name: string;
@@ -66,6 +73,7 @@ export interface AdminVendorsResponse {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
   };
+   stats: AdminVendorStats;
 }
 
 export interface AdminCategory {

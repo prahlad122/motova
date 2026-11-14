@@ -7,7 +7,17 @@
     "dev": "tsx watch server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:setup": "dotenv -e .env.test tsx scripts/test-setup.ts",
+    "test:cleanup": "dotenv -e .env.test tsx scripts/test-cleanup.ts",
+    "test:api": "dotenv -e .env.test tsx scripts/run-api-tests.ts",
+    "test:api:all": "dotenv -e .env.test tsx scripts/run-api-tests.ts all",
+    "test:api:auth": "dotenv -e .env.test tsx scripts/run-api-tests.ts auth",
+    "test:api:vendor": "dotenv -e .env.test tsx scripts/run-api-tests.ts vendor",
+    "test:api:products": "dotenv -e .env.test tsx scripts/run-api-tests.ts products",
+    "test:api:approval": "dotenv -e .env.test tsx scripts/run-api-tests.ts approval",
+    "test:api:analytics": "dotenv -e .env.test tsx scripts/run-api-tests.ts analytics",
+    "test:run": "npm run test:setup && npm run test:api:all && npm run test:cleanup"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +55,8 @@
     "@types/pg": "^8.23.1",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "dotenv-cli": "^7.4.2",
+    "newman": "^6.2.3",
     "prisma": "^7.10.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
