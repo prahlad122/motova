@@ -8,6 +8,8 @@ import {
   updateAdminProduct,
   setAdminProductStatus,
   archiveAdminProduct,
+  getAdminProductStats,
+  reviewAdminProductRevision,
 } from "./product.service.js";
 import {
   productListQuerySchema,
@@ -266,4 +268,28 @@ export async function deleteAdminProduct(
   } catch (error) {
     return serviceError(error, res, next);
   }
+}
+
+export async function getAdminProductStatsController(_req: Request, res: Response, next: NextFunction) {
+  try { return res.status(200).json({ success: true, data: await getAdminProductStats() }); }
+  catch (error) { return serviceError(error, res, next); }
+}
+
+export async function approveAdminProductRevision(req: Request, res: Response, next: NextFunction) {
+  const revisionId = productParamsSchema.safeParse({ productId: req.params.revisionId });
+  if (!revisionId.success) return validationError(res, revisionId.error, "Invalid revision ID.");
+  const reviewerId = (req as Request & { user?: { userId: string } }).user?.userId;
+  if (!reviewerId) return res.status(401).json({ success: false, message: "Admin identity was not found." });
+  try { return res.status(200).json({ success: true, message: "Product revision approved.", data: await reviewAdminProductRevision(revisionId.data.productId, reviewerId, "APPROVED") }); }
+  catch (error) { return serviceError(error, res, next); }
+}
+
+export async function rejectAdminProductRevision(req: Request, res: Response, next: NextFunction) {
+  const revisionId = productParamsSchema.safeParse({ productId: req.params.revisionId });
+  if (!revisionId.success) return validationError(res, revisionId.error, "Invalid revision ID.");
+  const reason = (req.body as { reason: string }).reason;
+  const reviewerId = (req as Request & { user?: { userId: string } }).user?.userId;
+  if (!reviewerId) return res.status(401).json({ success: false, message: "Admin identity was not found." });
+  try { return res.status(200).json({ success: true, message: "Product revision rejected.", data: await reviewAdminProductRevision(revisionId.data.productId, reviewerId, "REJECTED", reason) }); }
+  catch (error) { return serviceError(error, res, next); }
 }

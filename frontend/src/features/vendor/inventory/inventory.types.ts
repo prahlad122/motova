@@ -10,6 +10,8 @@ export interface Product {
   status: string;
   listingStatus: string;
   listingNote: string | null;
+  updatedAt?: string;
+  revisions?: ProductRevision[];
   category: {
     id: string;
     name: string;
@@ -25,6 +27,15 @@ export interface Product {
   }[];
   createdAt: string;
 }
+
+export interface ProductRevision {
+  id: string; status: "PENDING" | "APPROVED" | "REJECTED"; submittedAt: string;
+  reviewedAt: string | null; rejectionReason: string | null; name: string; sku: string;
+  description: string | null; price: number; compareAtPrice: number | null; stockQuantity: number;
+  images: { id: string; imageUrl: string; altText: string | null }[];
+}
+
+export interface ProductImageInput { imageUrl: string; storageKey?: string | null; altText?: string | null }
 
 export interface Category {
   id: string;
@@ -46,6 +57,8 @@ export interface CreateProductInput {
   price: number;
   compareAtPrice?: number;
   stockQuantity: number;
+  status?: "DRAFT" | "ACTIVE" | "INACTIVE";
+  images?: ProductImageInput[];
 }
 
 export interface ProductFormState {

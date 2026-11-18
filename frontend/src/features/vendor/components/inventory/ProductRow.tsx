@@ -3,6 +3,10 @@ import type { Product } from "../../inventory/inventory.types";
 
 interface ProductRowProps {
   product: Product;
+  onView: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onArchive: (product: Product) => void;
+  onToggle: (product: Product) => void;
 }
 
 const money = (value: number) =>
@@ -49,7 +53,7 @@ function statusStyle(status: string) {
   return "bg-gray-100 text-gray-700";
 }
 
-export default function ProductRow({ product }: ProductRowProps) {
+export default function ProductRow({ product, onView, onEdit, onArchive, onToggle }: ProductRowProps) {
   const status = productStatus(product);
 
   return (
@@ -73,6 +77,7 @@ export default function ProductRow({ product }: ProductRowProps) {
             <p className="mt-1 text-xs text-gray-500">
               SKU {product.sku}
             </p>
+            <p className="mt-1 text-[10px] text-gray-400">Created {new Date(product.createdAt).toLocaleDateString("en-IN")}</p>
           </div>
         </div>
       </td>
@@ -130,6 +135,7 @@ export default function ProductRow({ product }: ProductRowProps) {
           )}
         </div>
       </td>
+      <td className="px-4 py-3"><div className="flex gap-1"><button onClick={() => onView(product)} className="rounded px-2 py-1 text-xs text-blue-700 hover:bg-blue-50">View</button><button onClick={() => onEdit(product)} className="rounded px-2 py-1 text-xs text-[#475467] hover:bg-gray-100">Edit</button>{product.listingStatus === "APPROVED" && <button onClick={() => onToggle(product)} className="rounded px-2 py-1 text-xs text-[#475467] hover:bg-gray-100">{product.status === "ACTIVE" ? "Deactivate" : "Activate"}</button>}<button onClick={() => onArchive(product)} className="rounded px-2 py-1 text-xs text-rose-700 hover:bg-rose-50">Archive</button></div></td>
     </tr>
   );
 }

@@ -55,11 +55,15 @@ export async function reviewAdminDocument(input: {
 
     const requiredDocs = await tx.vendorDocument.findMany({
       where: { vendorProfileId: document.vendorProfileId, type: { in: [VendorDocumentType.GST_CERTIFICATE, VendorDocumentType.PAN_CARD] } },
-      select: { status: true },
+      orderBy: { submittedAt: "desc" },
+      select: { type: true, status: true },
     });
-    const verificationStatus = requiredDocs.some((item) => item.status === ReviewStatus.REJECTED)
+    const latestByType = new Map<VendorDocumentType, ReviewStatus>();
+    for (const item of requiredDocs) if (!latestByType.has(item.type)) latestByType.set(item.type, item.status);
+    const requiredStatuses = [...latestByType.values()];
+    const verificationStatus = requiredStatuses.some((status) => status === ReviewStatus.REJECTED)
       ? VendorVerificationStatus.REJECTED
-      : requiredDocs.length > 0 && requiredDocs.every((item) => item.status === ReviewStatus.APPROVED)
+      : requiredStatuses.length > 0 && requiredStatuses.every((status) => status === ReviewStatus.APPROVED)
         ? VendorVerificationStatus.APPROVED
         : VendorVerificationStatus.PENDING;
 

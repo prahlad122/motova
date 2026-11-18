@@ -83,6 +83,8 @@ export default function VendorsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [verification, setVerification] = useState("");
+  const [sortBy, setSortBy] = useState<"createdAt" | "name" | "businessName">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -103,6 +105,10 @@ export default function VendorsPage() {
   active: 0,
   pending: 0,
   profiles: 0,
+  unverified: 0,
+  verificationPending: 0,
+  verified: 0,
+  rejected: 0,
 });
 
   const loadVendors = useCallback(async () => {
@@ -120,6 +126,8 @@ export default function VendorsPage() {
         search,
         status,
         verificationStatus: verification,
+        sortBy,
+        sortOrder,
       });
      setVendors(result.vendors);
      setStats(result.stats);
@@ -130,7 +138,7 @@ export default function VendorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, status, verification]);
+  }, [page, search, status, verification, sortBy, sortOrder]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -363,6 +371,12 @@ export default function VendorsPage() {
             <option value="ACTIVE">Active</option>
             <option value="PENDING">Pending</option>
             <option value="SUSPENDED">Suspended</option>
+          </select>
+          <select aria-label="Sort vendors by" value={sortBy} onChange={(event) => { setPage(1); setSortBy(event.target.value as typeof sortBy); }} className="rounded-lg border border-[#dce2eb] bg-white px-3 py-2.5 text-sm text-[#475467]">
+            <option value="createdAt">Date joined</option><option value="name">Vendor name</option><option value="businessName">Business name</option>
+          </select>
+          <select aria-label="Sort direction" value={sortOrder} onChange={(event) => { setPage(1); setSortOrder(event.target.value as typeof sortOrder); }} className="rounded-lg border border-[#dce2eb] bg-white px-3 py-2.5 text-sm text-[#475467]">
+            <option value="desc">Descending</option><option value="asc">Ascending</option>
           </select>
           <select
             aria-label="Filter by verification status"
@@ -692,6 +706,13 @@ export default function VendorsPage() {
                               <p className="mt-1 text-xs text-rose-700">
                                 Reason: {document.rejectionReason}
                               </p>
+                            )}
+                            {document.reviews?.length > 0 && (
+                              <div className="mt-2 space-y-1 text-[11px] text-[#667085]">
+                                {document.reviews.map((review) => (
+                                  <p key={review.id}>Review: {review.status} by {review.reviewer.name} · {new Date(review.reviewedAt).toLocaleString("en-IN")}{review.note ? ` · ${review.note}` : ""}</p>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>

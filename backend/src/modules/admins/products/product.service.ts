@@ -5,9 +5,12 @@ import {
   UserStatus,
   VendorVerificationStatus,
   InventoryMovementType,
+  ProductRevisionStatus,
 } from "../../../generated/prisma/client.js";
+import { randomUUID } from "node:crypto";
 import { prisma } from "../../../config/database.js";
 import type { ProductListQuery } from "./product.validation.js";
+import { deleteFromR2, generateR2SignedUrl } from "../../../services/r2Storage.service.js";
 
 const LOW_STOCK_THRESHOLD = 5;
 function fail(message: string, statusCode: number): never {
@@ -25,6 +28,7 @@ function safePrismaError(error: unknown): never {
       );
     }
     if (error.code === "P2025") fail("Product not found.", 404);
+    if (error.code === "P2034") fail("This product review changed concurrently. Reload and try again.", 409);
     if (error.code === "P2003" || error.code === "P2014")
       fail(
         "Product cannot be changed because it is referenced by another record.",
@@ -36,20 +40,32 @@ function safePrismaError(error: unknown): never {
 
 function productWhere(query: ProductListQuery): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = {
+    status: query.status ?? { not: ProductStatus.ARCHIVED },
     ...(query.vendorId ? { vendorProfileId: query.vendorId } : {}),
     ...(query.categoryId ? { categoryId: query.categoryId } : {}),
     ...(query.brandId ? { brandId: query.brandId } : {}),
-    ...(query.status ? { status: query.status } : {}),
-    ...(query.listingStatus ? { listingStatus: query.listingStatus } : {}),
+    ...(query.listingStatus && query.listingStatus !== ReviewStatus.PENDING ? { listingStatus: query.listingStatus } : {}),
     ...(query.search
       ? {
           OR: [
             { name: { contains: query.search, mode: "insensitive" } },
             { sku: { contains: query.search, mode: "insensitive" } },
+            { vendor: { is: { businessName: { contains: query.search, mode: "insensitive" } } } },
+            { vendor: { is: { user: { is: { email: { contains: query.search, mode: "insensitive" } } } } } },
+            { vendor: { is: { user: { is: { name: { contains: query.search, mode: "insensitive" } } } } } },
           ],
         }
       : {}),
   };
+  if (query.listingStatus === ReviewStatus.PENDING) {
+    const searchOr = where.OR;
+    delete where.OR;
+    where.AND = [
+      ...(searchOr ? [{ OR: searchOr }] : []),
+      { OR: [{ listingStatus: ReviewStatus.PENDING }, { revisions: { some: { status: ProductRevisionStatus.PENDING } } }] },
+      { status: { not: ProductStatus.ARCHIVED } },
+    ];
+  }
   if (query.stockStatus === "IN_STOCK") where.stockQuantity = { gt: 0 };
   if (query.stockStatus === "LOW_STOCK")
     where.stockQuantity = { gt: 0, lte: LOW_STOCK_THRESHOLD };
@@ -76,7 +92,12 @@ const productListInclude = {
   },
   brand: { select: { id: true, name: true, slug: true, isActive: true } },
   images: { orderBy: { sortOrder: "asc" as const } },
+  revisions: { where: { status: ProductRevisionStatus.PENDING }, select: { id: true, status: true }, take: 1 },
 };
+
+async function presentProductImages<T extends { images: { imageUrl: string; storageKey: string | null }[] }>(product: T) {
+  return { ...product, images: await Promise.all(product.images.map(async (image) => ({ ...image, imageUrl: image.storageKey ? await generateR2SignedUrl(image.storageKey, 3600) : image.imageUrl }))) };
+}
 
 export async function listAdminProducts(query: ProductListQuery) {
   const where = productWhere(query);
@@ -91,12 +112,12 @@ export async function listAdminProducts(query: ProductListQuery) {
     prisma.product.count({ where }),
   ]);
   return {
-    products: products.map((product) => ({
-      ...product,
+    products: await Promise.all(products.map(async (product) => ({
+      ...await presentProductImages(product),
       price: Number(product.price),
       compareAtPrice:
         product.compareAtPrice === null ? null : Number(product.compareAtPrice),
-    })),
+    }))),
     pagination: {
       currentPage: query.page,
       pageSize: query.limit,
@@ -136,6 +157,15 @@ export async function getAdminProduct(productId: string) {
           reviewer: { select: { id: true, name: true, email: true } },
         },
       },
+      revisions: {
+        orderBy: { submittedAt: "desc" },
+        include: {
+          category: { select: { id: true, name: true } },
+          brand: { select: { id: true, name: true } },
+          images: { orderBy: { sortOrder: "asc" } },
+          reviewer: { select: { id: true, name: true, email: true } },
+        },
+      },
       inventoryMovements: {
         orderBy: { createdAt: "desc" },
         take: 50,
@@ -153,10 +183,15 @@ export async function getAdminProduct(productId: string) {
   });
   return (
     product && {
-      ...product,
+      ...await presentProductImages(product),
       price: Number(product.price),
       compareAtPrice:
         product.compareAtPrice === null ? null : Number(product.compareAtPrice),
+      revisions: await Promise.all(product.revisions.map(async (revision) => ({
+        ...await presentProductImages(revision),
+        price: Number(revision.price),
+        compareAtPrice: revision.compareAtPrice === null ? null : Number(revision.compareAtPrice),
+      }))),
     }
   );
 }
@@ -184,12 +219,11 @@ export async function reviewAdminProduct(
     return await prisma.$transaction(
       async (tx) => {
         const changed = await tx.product.updateMany({
-          where: { id: productId, listingStatus: ReviewStatus.PENDING },
+          where: { id: productId, listingStatus: ReviewStatus.PENDING, status: { not: ProductStatus.ARCHIVED } },
           data: {
             listingStatus: decision,
             ...(decision === ReviewStatus.APPROVED
               ? {
-                  status: ProductStatus.ACTIVE,
                   approvedAt: new Date(),
                   listingNote: null,
                 }
@@ -203,42 +237,6 @@ export async function reviewAdminProduct(
           });
           if (!current) fail("Product not found.", 404);
           fail("Only pending products can be reviewed.", 409);
-        }
-        const reviewedProduct = await tx.product.findUniqueOrThrow({
-          where: { id: productId },
-          select: {
-            id: true,
-            vendor: {
-              select: {
-                verificationStatus: true,
-                user: { select: { status: true } },
-              },
-            },
-            category: {
-              select: {
-                isActive: true,
-                parent: { select: { isActive: true } },
-              },
-            },
-            brand: { select: { isActive: true } },
-          },
-        });
-        if (decision === ReviewStatus.APPROVED) {
-          const storefrontEligible =
-            reviewedProduct.vendor.user.status === UserStatus.ACTIVE &&
-            reviewedProduct.vendor.verificationStatus ===
-              VendorVerificationStatus.APPROVED &&
-            reviewedProduct.category.isActive &&
-            reviewedProduct.category.parent?.isActive !== false &&
-            reviewedProduct.brand?.isActive !== false;
-          await tx.product.update({
-            where: { id: productId },
-            data: {
-              status: storefrontEligible
-                ? ProductStatus.ACTIVE
-                : ProductStatus.INACTIVE,
-            },
-          });
         }
         await tx.listingReview.create({
           data: {
@@ -296,6 +294,7 @@ export async function updateAdminProduct(
             status: true,
             listingStatus: true,
             stockQuantity: true,
+            images: { orderBy: { sortOrder: "asc" }, select: { imageUrl: true, storageKey: true, altText: true, sortOrder: true } },
             vendor: {
               select: {
                 verificationStatus: true,
@@ -366,8 +365,9 @@ export async function updateAdminProduct(
               (current.compareAtPrice === null
                 ? null
                 : Number(current.compareAtPrice)));
+        const listingDetailsChanged = significantChange || (input.sku !== undefined && input.sku.trim() !== current.sku);
         const requiresReview =
-          significantChange && current.listingStatus !== ReviewStatus.PENDING;
+          listingDetailsChanged && current.listingStatus !== ReviewStatus.PENDING;
         const effectivePrice = input.price ?? Number(current.price);
         const effectiveCompareAt =
           input.compareAtPrice === undefined
@@ -379,7 +379,28 @@ export async function updateAdminProduct(
           Number(effectiveCompareAt) <= effectivePrice
         )
           fail("Compare-at price must be greater than price.", 400);
-        if (input.status === ProductStatus.ACTIVE && !requiresReview) {
+        if (input.status === ProductStatus.ACTIVE) {
+          if (current.listingStatus !== ReviewStatus.APPROVED) fail("A product must be approved before it can be activated.", 409);
+          if (current.vendor.user.status !== UserStatus.ACTIVE || current.vendor.verificationStatus !== VendorVerificationStatus.APPROVED) fail("The vendor must be active and verified before this product can be activated.", 409);
+          if (!current.category.isActive || current.category.parent?.isActive === false || current.brand?.isActive === false) fail("The product category and brand must be active before activation.", 409);
+        }
+        const nextStock = input.stockQuantity ?? current.stockQuantity;
+        if (requiresReview && current.listingStatus === ReviewStatus.APPROVED) {
+          if (await tx.productRevision.count({ where: { productId, status: ProductRevisionStatus.PENDING } })) fail("A pending product revision already exists.", 409);
+          const revision = await tx.productRevision.create({ data: {
+            productId, vendorProfileId: current.vendorProfileId,
+            categoryId: input.categoryId ?? current.categoryId, brandId: input.brandId === undefined ? current.brandId : input.brandId,
+            name: input.name?.trim().replace(/\s+/g, " ") ?? current.name,
+            description: input.description === undefined ? current.description : input.description?.trim() || null,
+            sku: sku ?? current.sku, price: input.price ?? Number(current.price),
+            compareAtPrice: input.compareAtPrice === undefined ? current.compareAtPrice : input.compareAtPrice,
+            stockQuantity: nextStock,
+            images: { create: current.images.map((image) => ({ imageUrl: image.imageUrl, storageKey: image.storageKey, altText: image.altText, sortOrder: image.sortOrder })) },
+          }, include: { images: { orderBy: { sortOrder: "asc" } } } });
+          if (input.status !== undefined && input.status !== current.status) await tx.product.update({ where: { id: productId }, data: { status: input.status } });
+          return { ...revision, price: Number(revision.price), compareAtPrice: revision.compareAtPrice === null ? null : Number(revision.compareAtPrice), requiresReview: true };
+        }
+        if (input.status === ProductStatus.ACTIVE) {
           if (current.listingStatus !== ReviewStatus.APPROVED)
             fail("A product must be approved before it can be activated.", 409);
           if (
@@ -401,7 +422,6 @@ export async function updateAdminProduct(
               409,
             );
         }
-        const nextStock = input.stockQuantity ?? current.stockQuantity;
         const stockDelta = nextStock - current.stockQuantity;
         const updated = await tx.product.update({
           where: { id: productId },
@@ -431,7 +451,6 @@ export async function updateAdminProduct(
                   listingStatus: ReviewStatus.PENDING,
                   listingNote: null,
                   approvedAt: null,
-                  status: ProductStatus.INACTIVE,
                 }
               : {}),
           },
@@ -548,4 +567,56 @@ export async function archiveAdminProduct(productId: string) {
   } catch (error) {
     safePrismaError(error);
   }
+}
+
+export async function getAdminProductStats() {
+  const [total, pending, approved, rejected, active, inactive] = await Promise.all([
+    prisma.product.count({ where: { status: { not: ProductStatus.ARCHIVED } } }),
+    prisma.product.count({ where: { listingStatus: ReviewStatus.PENDING, status: { not: ProductStatus.ARCHIVED } } }),
+    prisma.product.count({ where: { listingStatus: ReviewStatus.APPROVED, status: { not: ProductStatus.ARCHIVED } } }),
+    prisma.product.count({ where: { listingStatus: ReviewStatus.REJECTED, status: { not: ProductStatus.ARCHIVED } } }),
+    prisma.product.count({ where: { status: ProductStatus.ACTIVE } }),
+    prisma.product.count({ where: { status: ProductStatus.INACTIVE } }),
+  ]);
+  const pendingRevisions = await prisma.productRevision.count({ where: { status: ProductRevisionStatus.PENDING, product: { status: { not: ProductStatus.ARCHIVED } } } });
+  return { total, pending: pending + pendingRevisions, approved, rejected, active, inactive, pendingRevisions };
+}
+
+export async function reviewAdminProductRevision(revisionId: string, reviewerId: string, decision: "APPROVED" | "REJECTED", reason?: string) {
+  if (decision === "REJECTED" && !reason?.trim()) fail("A rejection reason is required.", 400);
+  const oldStorageKeys: string[] = [];
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const revision = await tx.productRevision.findUnique({ where: { id: revisionId }, include: { images: { orderBy: { sortOrder: "asc" } } } });
+      if (!revision) fail("Product revision not found.", 404);
+      if (revision.status !== ProductRevisionStatus.PENDING) fail("Only pending revisions can be reviewed.", 409);
+      const changed = await tx.productRevision.updateMany({ where: { id: revisionId, status: ProductRevisionStatus.PENDING }, data: { status: decision, reviewerId, reviewedAt: new Date(), rejectionReason: decision === "REJECTED" ? reason!.trim() : null } });
+      if (!changed.count) fail("Revision was already reviewed by another administrator.", 409);
+      const product = await tx.product.findUnique({ where: { id: revision.productId }, select: { id: true, vendorProfileId: true, sku: true, stockQuantity: true, status: true } });
+      if (!product) fail("Product not found.", 404);
+      if (product.status === ProductStatus.ARCHIVED) fail("Archived products cannot be reviewed.", 409);
+      if (decision === "APPROVED") {
+        if (revision.sku !== product.sku && await tx.product.findUnique({ where: { vendorProfileId_sku: { vendorProfileId: product.vendorProfileId, sku: revision.sku } }, select: { id: true } })) fail("The proposed SKU is already used by this vendor.", 409);
+        const oldImages = await tx.productImage.findMany({ where: { productId: product.id }, select: { storageKey: true } });
+        oldStorageKeys.push(...oldImages.flatMap((image) => image.storageKey ? [image.storageKey] : []));
+        const slug = `${revision.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "product")}-${randomUUID().slice(0, 8)}`;
+        await tx.product.update({ where: { id: product.id }, data: {
+          name: revision.name, description: revision.description, categoryId: revision.categoryId, brandId: revision.brandId,
+          sku: revision.sku, slug, price: revision.price, compareAtPrice: revision.compareAtPrice,
+          stockQuantity: revision.stockQuantity, listingStatus: ReviewStatus.APPROVED, listingNote: null, approvedAt: new Date(),
+        } });
+        await tx.productImage.deleteMany({ where: { productId: product.id } });
+        if (revision.images.length) await tx.productImage.createMany({ data: revision.images.map((image) => ({ productId: product.id, imageUrl: image.imageUrl, storageKey: image.storageKey, altText: image.altText, sortOrder: image.sortOrder })) });
+        const delta = revision.stockQuantity - product.stockQuantity;
+        if (delta) await tx.inventoryMovement.create({ data: { vendorProfileId: product.vendorProfileId, productId: product.id, type: InventoryMovementType.ADJUSTMENT, quantity: delta, note: "Stock updated with approved product revision", recordedById: reviewerId } });
+      }
+      await tx.listingReview.create({ data: { productId: revision.productId, reviewerId, status: decision, note: decision === "REJECTED" ? reason!.trim() : "Product revision approved." } });
+      return tx.productRevision.findUniqueOrThrow({ where: { id: revisionId }, include: { product: { include: productListInclude }, images: { orderBy: { sortOrder: "asc" } } } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    if (decision === "APPROVED" && oldStorageKeys.length) {
+      const revisionImageKeys = result.images.flatMap((image) => image.storageKey ? [image.storageKey] : []);
+      await Promise.allSettled(oldStorageKeys.filter((key) => !revisionImageKeys.includes(key)).map((key) => deleteFromR2(key)));
+    }
+    return { ...result, price: Number(result.price), compareAtPrice: result.compareAtPrice === null ? null : Number(result.compareAtPrice) };
+  } catch (error) { safePrismaError(error); }
 }

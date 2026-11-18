@@ -12,6 +12,7 @@ import type {
   AdminBrandsResponse,
 } from "./admin.types";
 import type { AdminAnalyticsData } from "./admin.types";
+import type { AdminProduct, AdminProductStats, AdminProductsPage } from "./admin.types";
 
 export interface CreateAdminVendorInput {
   name: string;
@@ -95,6 +96,8 @@ export async function fetchAdminVendors(
     search?: string;
     status?: string;
     verificationStatus?: string;
+    sortBy?: "createdAt" | "name" | "businessName";
+    sortOrder?: "asc" | "desc";
   },
 ): Promise<AdminVendorsResponse> {
   const query = new URLSearchParams({
@@ -108,6 +111,8 @@ export async function fetchAdminVendors(
   if (params.verificationStatus) {
     query.set("verificationStatus", params.verificationStatus);
   }
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortOrder) query.set("sortOrder", params.sortOrder);
 
   let response: Response;
 
@@ -213,6 +218,22 @@ export function createAdminCategory(token: string, input: Record<string, unknown
 export function updateAdminCategory(token: string, id: string, input: Record<string, unknown>) { return adminRequest<AdminCategory>(`/admin/categories/${id}`, token, { method: "PATCH", body: JSON.stringify(input) }); }
 export function setAdminCategoryStatus(token: string, id: string, isActive: boolean) { return adminRequest<AdminCategory>(`/admin/categories/${id}/status`, token, { method: "PATCH", body: JSON.stringify({ isActive }) }); }
 export function deleteAdminCategory(token: string, id: string) { return adminRequest<null>(`/admin/categories/${id}`, token, { method: "DELETE" }); }
+
+export async function fetchAdminProducts(token: string, params: { page: number; limit: number; search?: string; listingStatus?: string; status?: string; vendorId?: string; categoryId?: string; sortBy?: string; sortOrder?: string }): Promise<AdminProductsPage> {
+  const query = new URLSearchParams({ page: String(params.page), limit: String(params.limit), sortBy: params.sortBy ?? "createdAt", sortOrder: params.sortOrder ?? "desc" });
+  for (const key of ["search", "listingStatus", "status", "vendorId", "categoryId"] as const) if (params[key]) query.set(key, params[key]!);
+  const response = await fetch(`${API_URL}/admin/products?${query}`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+  const envelope = await response.clone().json() as { pagination?: AdminProductsPage["pagination"] };
+  const products = await parseApiResponse<AdminProduct[]>(response);
+  if (!envelope.pagination) throw new Error("The server returned invalid product pagination.");
+  return { products, pagination: envelope.pagination };
+}
+export function fetchAdminProductStats(token: string) { return adminRequest<AdminProductStats>("/admin/products/stats", token); }
+export function getAdminProduct(token: string, productId: string) { return adminRequest<AdminProduct>(`/admin/products/${productId}`, token); }
+export function approveAdminProduct(token: string, productId: string) { return adminRequest<AdminProduct>(`/admin/products/${productId}/approve`, token, { method: "PATCH" }); }
+export function rejectAdminProduct(token: string, productId: string, reason: string) { return adminRequest<AdminProduct>(`/admin/products/${productId}/reject`, token, { method: "PATCH", body: JSON.stringify({ reason }) }); }
+export function approveAdminProductRevision(token: string, revisionId: string) { return adminRequest<AdminProduct>(`/admin/products/revisions/${revisionId}/approve`, token, { method: "PATCH" }); }
+export function rejectAdminProductRevision(token: string, revisionId: string, reason: string) { return adminRequest<AdminProduct>(`/admin/products/revisions/${revisionId}/reject`, token, { method: "PATCH", body: JSON.stringify({ reason }) }); }
 export async function uploadAdminCategoryImage(token: string, file: File) {
   const data = new FormData(); data.set("image", file);
   let response: Response;

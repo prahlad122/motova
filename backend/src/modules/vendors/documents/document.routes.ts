@@ -10,6 +10,7 @@ import { validateVendorDocumentTypes } from "./document.validation.js";
 import {
   uploadVendorDocumentController,
   getVendorDocumentAccessController,
+  getVendorVerificationStatusController,
 } from "./document.controller.js";
 
 const router = Router();
@@ -18,6 +19,7 @@ const router = Router();
 router.use(authenticate, authorizeVendor);
 
 // Upload multiple vendor documents.
+router.get("/status", getVendorVerificationStatusController);
 router.post(
   "/",
   uploadVendorDocument,

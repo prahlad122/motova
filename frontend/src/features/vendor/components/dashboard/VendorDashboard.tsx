@@ -11,6 +11,7 @@ import SalesAndTodos from "./SalesAndTodos";
 import RecentOrders from "./RecentOrders";
 import TopSellingProducts from "./TopSellingProducts";
 import PayoutCard from "./PayoutCard";
+import Link from "next/link";
 
 export default function VendorDashboard() {
   const {
@@ -76,6 +77,15 @@ export default function VendorDashboard() {
         rangeDays={rangeDays}
         setRangeDays={setRangeDays}
       />
+
+      {dashboard.vendor.verificationStatus !== "APPROVED" && (
+        <section className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">{dashboard.vendor.verificationStatus.replaceAll("_", " ")}</p>
+          <h2 className="mt-2 text-lg font-semibold text-slate-900">{dashboard.vendor.verificationStatus === "PENDING" ? "Verification Under Review" : dashboard.vendor.verificationStatus === "REJECTED" ? "Verification Requires Attention" : "Complete Your Business Verification"}</h2>
+          <p className="mt-1 text-sm text-slate-600">{dashboard.vendor.verificationStatus === "PENDING" ? "We’re reviewing your business documents. Product listing access will be enabled after approval." : "Before you can start listing products on Motova, submit your required business documents for verification."}</p>
+          <Link href="/vendor/verification" className="mt-4 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">{dashboard.vendor.verificationStatus === "PENDING" ? "View verification status" : "Complete Verification"}</Link>
+        </section>
+      )}
 
       {/* Refresh error */}
       {error && (

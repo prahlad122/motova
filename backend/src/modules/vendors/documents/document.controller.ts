@@ -7,7 +7,16 @@ import { VendorDocumentType } from "../../../generated/prisma/client.js";
 import {
   uploadVendorDocuments,
   getVendorDocumentSignedUrl,
+  getVendorVerificationStatus,
 } from "./document.service.js";
+
+export async function getVendorVerificationStatusController(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user?.userId) return res.status(401).json({ success: false, message: "Authentication required." });
+    const data = await getVendorVerificationStatus(req.user.userId);
+    return res.status(200).json({ success: true, data });
+  } catch (error) { return next(error); }
+}
 
 export const uploadVendorDocumentController = async (
   req: AuthenticatedRequest,
