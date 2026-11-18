@@ -19,6 +19,10 @@ export interface AdminVendorStats {
   active: number;
   pending: number;
   profiles: number;
+  unverified: number;
+  verificationPending: number;
+  verified: number;
+  rejected: number;
 } 
 
 export interface AdminVendor {
@@ -34,6 +38,7 @@ export interface AdminVendor {
     gstNumber: string | null;
     mobileVerified: boolean;
     verificationStatus: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
+    documents?: { submittedAt: string; reviewedAt: string | null }[];
   } | null;
 }
 
@@ -46,12 +51,14 @@ export interface AdminVendorDocument {
   status: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason: string | null;
   submittedAt: string;
+  reviewedAt: string | null;
+  reviews: { id: string; status: "PENDING" | "APPROVED" | "REJECTED"; note: string | null; reviewedAt: string; reviewer: { id: string; name: string } }[];
 }
 
 export interface AdminVendorDetails extends Omit<AdminVendor, "vendorProfile"> {
   role: "VENDOR";
   updatedAt: string;
-  vendorProfile: (NonNullable<AdminVendor["vendorProfile"]> & {
+  vendorProfile: (Omit<NonNullable<AdminVendor["vendorProfile"]>, "documents"> & {
     businessAddress: string | null;
     shippingAddress: string | null;
     storeManager: string | null;
@@ -123,3 +130,24 @@ export interface AdminAnalyticsData {
   definitions?: Record<string, string>;
   inventoryValueNote?: string;
 }
+
+export interface AdminProduct {
+  id: string; name: string; description: string | null; sku: string; price: number; compareAtPrice: number | null;
+  stockQuantity: number; status: string; listingStatus: string; listingNote: string | null;
+  createdAt: string; updatedAt: string; approvedAt: string | null;
+  category: { id: string; name: string; slug?: string };
+  brand: { id: string; name: string } | null;
+  images: { id: string; imageUrl: string; storageKey?: string | null; altText: string | null }[];
+  vendor: { id: string; businessName: string | null; verificationStatus?: string; user: { id: string; name: string; email: string | null; status?: string } };
+  revisions?: AdminProductRevision[];
+  listingReviews?: { id: string; status: string; note: string | null; reviewedAt: string; reviewer: { id: string; name: string; email: string | null } }[];
+}
+export interface AdminProductRevision {
+  id: string; status: string; submittedAt: string; reviewedAt: string | null; rejectionReason: string | null;
+  name: string; description: string | null; sku: string; price: number; compareAtPrice: number | null; stockQuantity: number;
+  category: { id: string; name: string }; brand: { id: string; name: string } | null;
+  images: { id: string; imageUrl: string; storageKey?: string | null; altText: string | null }[];
+  reviewer?: { id: string; name: string; email: string | null } | null;
+}
+export interface AdminProductStats { total: number; pending: number; approved: number; rejected: number; active: number; inactive: number; pendingRevisions: number }
+export interface AdminProductsPage { products: AdminProduct[]; pagination: { currentPage: number; pageSize: number; totalProducts: number; totalPages: number; hasNextPage: boolean; hasPreviousPage: boolean } }

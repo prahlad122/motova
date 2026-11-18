@@ -11,6 +11,10 @@ export async function listSelectableCategories() {
   });
 }
 
+export async function listSelectableBrands() {
+  return prisma.brand.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } });
+}
+
 function startOfLocalDay(date: Date) {
   const value = new Date(date);
   value.setHours(0, 0, 0, 0);

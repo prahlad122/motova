@@ -61,13 +61,15 @@ export default function VendorsTable({
       </div>
       {vendors.length ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left">
+          <table className="w-full min-w-[1020px] text-left">
             <thead className="bg-[#f8f9fb] text-[10px] font-semibold uppercase tracking-wide text-[#8993a5]">
               <tr>
                 <th className="px-5 py-3">Vendor</th>
                 <th className="px-4 py-3">Business</th>
                 <th className="px-4 py-3">Verification</th>
                 <th className="px-4 py-3">Account</th>
+                <th className="px-4 py-3">Submitted</th>
+                <th className="px-4 py-3">Last review</th>
                 <th className="px-4 py-3">Joined</th>
                 <th className="px-5 py-3 text-right">Details</th>
               </tr>
@@ -107,12 +109,19 @@ export default function VendorsTable({
                       <p className="mt-1 text-[11px] text-[#8993a5]">
                         {vendor.mobile}
                       </p>
+                      {vendor.vendorProfile?.gstNumber && <p className="mt-1 text-[10px] text-[#8993a5]">GST {vendor.vendorProfile.gstNumber}</p>}
                     </td>
                     <td className="px-4 py-3.5">
                       <Status variant={verifyTone}>{verification}</Status>
                     </td>
                     <td className="px-4 py-3.5">
                       <Status variant={accountTone}>{vendor.status}</Status>
+                    </td>
+                    <td className="px-4 py-3.5 text-xs text-[#667085]">
+                      {vendor.vendorProfile?.documents?.[0]?.submittedAt ? new Date(vendor.vendorProfile.documents[0].submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-xs text-[#667085]">
+                      {vendor.vendorProfile?.documents?.[0]?.reviewedAt ? new Date(vendor.vendorProfile.documents[0].reviewedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </td>
                     <td className="px-4 py-3.5 text-xs text-[#667085]">
                       {new Date(vendor.createdAt).toLocaleDateString("en-IN", {

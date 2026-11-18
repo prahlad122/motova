@@ -342,6 +342,23 @@ export const uploadVendorDocuments = async ({
   }
 };
 
+export async function getVendorVerificationStatus(userId: string) {
+  const vendor = await prisma.vendorProfile.findUnique({
+    where: { userId },
+    select: {
+      id: true, verificationStatus: true, verificationNote: true, verifiedAt: true,
+      updatedAt: true,
+      user: { select: { status: true } },
+      documents: { orderBy: { submittedAt: "desc" }, select: {
+        id: true, type: true, fileName: true, mimeType: true, fileSize: true,
+        status: true, rejectionReason: true, reviewedAt: true, submittedAt: true,
+      } },
+    },
+  });
+  if (!vendor) throw Object.assign(new Error("Vendor profile not found."), { statusCode: 404 });
+  return vendor;
+}
+
 /**
  * Generate temporary access to a vendor document.
  * Call only after checking that the requester is authorized

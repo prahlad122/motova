@@ -41,6 +41,12 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum ProductRevisionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ProductStatus {
   DRAFT
   ACTIVE
@@ -113,25 +119,26 @@ enum ReturnReason {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  name         String
-  email        String?    @unique
-  mobile       String?    @unique
-  passwordHash String
-  mobileOtps MobileOtp[]
-  role         UserRole
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  mustChangePassword Boolean @default(false)
+  id                 String      @id @default(uuid())
+  name               String
+  email              String?     @unique
+  mobile             String?     @unique
+  passwordHash       String
+  mobileOtps         MobileOtp[]
+  role               UserRole
+  status             UserStatus  @default(ACTIVE)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  mustChangePassword Boolean     @default(false)
 
   vendorProfile              VendorProfile?
   customerProfile            CustomerProfile?
-  reviewedDocuments          DocumentReview[]     @relation("DocumentReviewer")
-  listingReviews             ListingReview[]      @relation("ListingReviewer")
+  reviewedDocuments          DocumentReview[]    @relation("DocumentReviewer")
+  listingReviews             ListingReview[]     @relation("ListingReviewer")
+  productRevisionsReviewed   ProductRevision[]   @relation("ProductRevisionReviewer")
   notifications              Notification[]
-  auditLogs                  AuditLog[]           @relation("AuditActor")
-  inventoryMovementsRecorded InventoryMovement[]  @relation("InventoryRecorder")
+  auditLogs                  AuditLog[]          @relation("AuditActor")
+  inventoryMovementsRecorded InventoryMovement[] @relation("InventoryRecorder")
 
   @@index([role, status])
 }
@@ -153,15 +160,16 @@ model VendorProfile {
   verifiedAt          DateTime?
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt
-  gstNumber           String?  @unique
-  shippingAddress     String?  @db.Text
+  gstNumber           String?                  @unique
+  shippingAddress     String?                  @db.Text
   storeManager        String?
   authorizedPerson    String?
-  mobileVerified      Boolean  @default(false)
+  mobileVerified      Boolean                  @default(false)
 
   user               User                @relation(fields: [userId], references: [id], onDelete: Restrict)
   documents          VendorDocument[]
   products           Product[]
+  productRevisions   ProductRevision[]
   inventoryMovements InventoryMovement[]
   vendorOrders       VendorOrder[]
   payouts            VendorPayout[]
@@ -170,31 +178,29 @@ model VendorProfile {
   @@index([businessName])
 }
 
-
-
 model VendorDocument {
-  id              String             @id @default(uuid())
+  id              String @id @default(uuid())
   vendorProfileId String
 
-  type            VendorDocumentType
+  type VendorDocumentType
 
   // Object storage metadata (Cloudflare R2)
-  fileName        String
-  fileUrl         String
-  storageKey      String?
-  mimeType        String?
-  fileSize        Int?
+  fileName   String
+  fileUrl    String
+  storageKey String?
+  mimeType   String?
+  fileSize   Int?
 
   // Latest review status
-  status          ReviewStatus       @default(PENDING)
-  rejectionReason String?            @db.Text
+  status          ReviewStatus @default(PENDING)
+  rejectionReason String?      @db.Text
   reviewedAt      DateTime?
 
-  submittedAt     DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  vendor          VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
-  reviews         DocumentReview[]
+  vendor  VendorProfile    @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
+  reviews DocumentReview[]
 
   @@index([vendorProfileId, status])
   @@index([vendorProfileId, type])
@@ -216,20 +222,18 @@ model DocumentReview {
   @@index([reviewerId])
 }
 
-
-
 model MobileOtp {
-  id          String   @id @default(uuid())
-  userId      String
+  id     String @id @default(uuid())
+  userId String
 
-  otpHash     String
-  expiresAt   DateTime
-  attempts    Int      @default(0)
-  lastSentAt  DateTime?
-  verifiedAt  DateTime?
+  otpHash    String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  lastSentAt DateTime?
+  verifiedAt DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -237,14 +241,13 @@ model MobileOtp {
   @@index([expiresAt])
 }
 
-
 model CustomerProfile {
-  id          String   @id @default(uuid())
-  userId      String   @unique
+  id          String    @id @default(uuid())
+  userId      String    @unique
   dateOfBirth DateTime?
   avatarUrl   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user      User              @relation(fields: [userId], references: [id], onDelete: Restrict)
   addresses CustomerAddress[]
@@ -279,20 +282,21 @@ model CustomerAddress {
 }
 
 model Category {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
-  slug        String     @unique
-  description String?    @db.Text
+  slug        String   @unique
+  description String?  @db.Text
   parentId    String?
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  image     String?
-  sortOrder Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  image       String?
+  sortOrder   Int      @default(0)
 
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
-  children Category[] @relation("CategoryTree")
-  products Product[]
+  parent    Category?         @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Category[]        @relation("CategoryTree")
+  products  Product[]
+  revisions ProductRevision[]
 
   @@index([parentId])
   @@index([isActive])
@@ -308,7 +312,8 @@ model Brand {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  products Product[]
+  products  Product[]
+  revisions ProductRevision[]
 
   @@index([isActive])
 }
@@ -332,16 +337,17 @@ model Product {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  vendor            VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
-  category          Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  brand             Brand?             @relation(fields: [brandId], references: [id], onDelete: Restrict)
-  images            ProductImage[]
+  vendor             VendorProfile       @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
+  category           Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brand              Brand?              @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  images             ProductImage[]
   inventoryMovements InventoryMovement[]
-  listingReviews    ListingReview[]
-  cartItems         CartItem[]
-  wishlistItems     WishlistItem[]
-  orderItems        OrderItem[]
-  reviews           ProductReview[]
+  listingReviews     ListingReview[]
+  revisions          ProductRevision[]
+  cartItems          CartItem[]
+  wishlistItems      WishlistItem[]
+  orderItems         OrderItem[]
+  reviews            ProductReview[]
 
   @@unique([vendorProfileId, sku])
   @@index([vendorProfileId, status])
@@ -349,6 +355,51 @@ model Product {
   @@index([brandId])
   @@index([listingStatus, status])
   @@index([createdAt])
+}
+
+model ProductRevision {
+  id              String                @id @default(uuid())
+  productId       String
+  vendorProfileId String
+  categoryId      String
+  brandId         String?
+  name            String
+  description     String?               @db.Text
+  sku             String
+  price           Decimal               @db.Decimal(12, 2)
+  compareAtPrice  Decimal?              @db.Decimal(12, 2)
+  stockQuantity   Int
+  status          ProductRevisionStatus @default(PENDING)
+  reviewerId      String?
+  submittedAt     DateTime              @default(now())
+  reviewedAt      DateTime?
+  rejectionReason String?               @db.Text
+
+  product  Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  vendor   VendorProfile          @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
+  category Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brand    Brand?                 @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  reviewer User?                  @relation("ProductRevisionReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  images   ProductRevisionImage[]
+
+  @@index([productId, submittedAt])
+  @@index([vendorProfileId, status, submittedAt])
+  @@index([status, submittedAt])
+  @@index([reviewerId])
+}
+
+model ProductRevisionImage {
+  id         String   @id @default(uuid())
+  revisionId String
+  imageUrl   String
+  storageKey String?
+  altText    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  revision ProductRevision @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+
+  @@index([revisionId, sortOrder])
 }
 
 model ProductImage {
@@ -366,7 +417,7 @@ model ProductImage {
 }
 
 model InventoryMovement {
-  id              String               @id @default(uuid())
+  id              String                @id @default(uuid())
   vendorProfileId String
   productId       String
   type            InventoryMovementType
@@ -374,7 +425,7 @@ model InventoryMovement {
   note            String?
   reference       String?
   recordedById    String?
-  createdAt       DateTime             @default(now())
+  createdAt       DateTime              @default(now())
 
   vendor     VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
   product    Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -386,12 +437,12 @@ model InventoryMovement {
 }
 
 model ListingReview {
-  id              String       @id @default(uuid())
-  productId       String
-  reviewerId      String
-  status          ReviewStatus
-  note            String?      @db.Text
-  reviewedAt      DateTime     @default(now())
+  id         String       @id @default(uuid())
+  productId  String
+  reviewerId String
+  status     ReviewStatus
+  note       String?      @db.Text
+  reviewedAt DateTime     @default(now())
 
   product  Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   reviewer User    @relation("ListingReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
@@ -470,9 +521,9 @@ model Order {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  customer    CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
+  customer     CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
   vendorOrders VendorOrder[]
-  payments    Payment[]
+  payments     Payment[]
 
   @@index([customerProfileId, createdAt])
   @@index([status, createdAt])
@@ -481,22 +532,22 @@ model Order {
 }
 
 model VendorOrder {
-  id              String      @id @default(uuid())
-  orderId         String
-  vendorProfileId String
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(12, 2)
-  shippingFee     Decimal     @default(0) @db.Decimal(12, 2)
-  taxAmount       Decimal     @default(0) @db.Decimal(12, 2)
-  commissionAmount Decimal    @default(0) @db.Decimal(12, 2)
-  vendorAmount    Decimal     @db.Decimal(12, 2)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String      @id @default(uuid())
+  orderId          String
+  vendorProfileId  String
+  status           OrderStatus @default(PENDING)
+  subtotal         Decimal     @db.Decimal(12, 2)
+  shippingFee      Decimal     @default(0) @db.Decimal(12, 2)
+  taxAmount        Decimal     @default(0) @db.Decimal(12, 2)
+  commissionAmount Decimal     @default(0) @db.Decimal(12, 2)
+  vendorAmount     Decimal     @db.Decimal(12, 2)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  order    Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  vendor   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
-  items    OrderItem[]
-  shipment Shipment?
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  vendor      VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
+  items       OrderItem[]
+  shipment    Shipment?
   payoutItems PayoutItem[]
 
   @@unique([orderId, vendorProfileId])
@@ -515,8 +566,8 @@ model OrderItem {
   lineTotal     Decimal  @db.Decimal(12, 2)
   createdAt     DateTime @default(now())
 
-  vendorOrder VendorOrder @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
-  product     Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  vendorOrder VendorOrder     @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
   returns     ReturnRequest[]
 
   @@index([vendorOrderId])
@@ -555,16 +606,16 @@ model Shipment {
 }
 
 model VendorPayout {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   vendorProfileId String
-  amount          Decimal  @db.Decimal(12, 2)
-  currency        String   @default("INR")
-  status          String   @default("PENDING")
-  reference       String?  @unique
-  note            String?  @db.Text
+  amount          Decimal   @db.Decimal(12, 2)
+  currency        String    @default("INR")
+  status          String    @default("PENDING")
+  reference       String?   @unique
+  note            String?   @db.Text
   paidAt          DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Restrict)
   items  PayoutItem[]
@@ -573,11 +624,11 @@ model VendorPayout {
 }
 
 model PayoutItem {
-  id             String      @id @default(uuid())
-  payoutId       String
-  vendorOrderId  String
-  amount         Decimal     @db.Decimal(12, 2)
-  createdAt      DateTime    @default(now())
+  id            String   @id @default(uuid())
+  payoutId      String
+  vendorOrderId String
+  amount        Decimal  @db.Decimal(12, 2)
+  createdAt     DateTime @default(now())
 
   payout      VendorPayout @relation(fields: [payoutId], references: [id], onDelete: Restrict)
   vendorOrder VendorOrder  @relation(fields: [vendorOrderId], references: [id], onDelete: Restrict)
@@ -615,8 +666,8 @@ model ReturnRequest {
   updatedAt         DateTime     @updatedAt
   resolvedAt        DateTime?
 
-  customer CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
-  orderItem OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  customer  CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Restrict)
+  orderItem OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
 
   @@index([customerProfileId, status, requestedAt])
   @@index([orderItemId, status])

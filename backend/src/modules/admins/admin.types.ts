@@ -21,6 +21,8 @@ export interface GetVendorsQuery {
     | "PENDING"
     | "APPROVED"
     | "REJECTED";
+  sortBy: "createdAt" | "name" | "businessName";
+  sortOrder: "asc" | "desc";
   page: number;
   limit: number;
 }

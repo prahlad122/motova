@@ -1,11 +1,12 @@
 
-import { Building2, CircleCheck, FileClock, Store } from "lucide-react";
+import { Building2, CircleCheck, FileClock, Store, ShieldAlert } from "lucide-react";
 
 const cards = [
   { label: "Total vendors", key: "total", icon: Store, tone: "blue" },
-  { label: "Active vendors", key: "active", icon: CircleCheck, tone: "green" },
-  { label: "Pending vendors", key: "pending", icon: FileClock, tone: "amber" },
-  { label: "Total profiles", key: "profiles", icon: Building2, tone: "violet" },
+  { label: "Not submitted", key: "unverified", icon: ShieldAlert, tone: "violet" },
+  { label: "Pending review", key: "verificationPending", icon: FileClock, tone: "amber" },
+  { label: "Verified", key: "verified", icon: CircleCheck, tone: "green" },
+  { label: "Rejected", key: "rejected", icon: Building2, tone: "violet" },
 ] as const;
 
 export default function VendorStats({
@@ -21,7 +22,7 @@ export default function VendorStats({
   };
 
   return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       {cards.map(({ label, key, icon: Icon, tone }) => (
         <article
           key={key}

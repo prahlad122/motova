@@ -167,7 +167,7 @@ export async function createVendorByAdmin(input: CreateVendorInput) {
 
 
 export async function getAdminVendors(query: GetVendorsQuery) {
-  const { search, status, verificationStatus, page, limit } = query;
+    const { search, status, verificationStatus, page, limit, sortBy, sortOrder } = query;
 
   const skip = (page - 1) * limit;
 
@@ -228,15 +228,21 @@ export async function getAdminVendors(query: GetVendorsQuery) {
     active,
     pending,
     profiles,
+    unverified,
+    verificationPending,
+    verified,
+    rejected,
   ] = await prisma.$transaction([
     // 1. Paginated vendor records
     prisma.user.findMany({
       where,
       skip,
       take: limit,
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: sortBy === "name"
+        ? { name: sortOrder }
+        : sortBy === "businessName"
+          ? { vendorProfile: { businessName: sortOrder } }
+          : { createdAt: sortOrder },
       select: {
         id: true,
         name: true,
@@ -251,6 +257,7 @@ export async function getAdminVendors(query: GetVendorsQuery) {
             gstNumber: true,
             mobileVerified: true,
             verificationStatus: true,
+            documents: { orderBy: { submittedAt: "desc" }, take: 1, select: { submittedAt: true, reviewedAt: true } },
           },
         },
       },
@@ -284,24 +291,32 @@ export async function getAdminVendors(query: GetVendorsQuery) {
 
     // 6. Total vendor profiles
     prisma.vendorProfile.count(),
+    prisma.user.count({ where: { role: UserRole.VENDOR, OR: [{ vendorProfile: { is: { verificationStatus: VendorVerificationStatus.NOT_SUBMITTED } } }, { vendorProfile: { is: null } }] } }),
+    prisma.user.count({ where: { role: UserRole.VENDOR, vendorProfile: { is: { verificationStatus: VendorVerificationStatus.PENDING } } } }),
+    prisma.user.count({ where: { role: UserRole.VENDOR, vendorProfile: { is: { verificationStatus: VendorVerificationStatus.APPROVED } } } }),
+    prisma.user.count({ where: { role: UserRole.VENDOR, vendorProfile: { is: { verificationStatus: VendorVerificationStatus.REJECTED } } } }),
   ]);
 
   return {
     vendors,
 
     stats: {
-      total,
+      total: totalVendors,
       active,
       pending,
       profiles,
+      unverified,
+      verificationPending,
+      verified,
+      rejected,
     },
 
     pagination: {
       currentPage: page,
       pageSize: limit,
-      totalVendors,
-      totalPages: Math.ceil(totalVendors / limit),
-      hasNextPage: page * limit < totalVendors,
+      totalVendors: total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
       hasPreviousPage: page > 1,
     },
   };
@@ -350,6 +365,8 @@ export async function getAdminVendorById(vendorId: string) {
               status: true,
               rejectionReason: true,
               submittedAt: true,
+              reviewedAt: true,
+              reviews: { orderBy: { reviewedAt: "desc" }, select: { id: true, status: true, note: true, reviewedAt: true, reviewer: { select: { id: true, name: true } } } },
             },
             orderBy: { submittedAt: "desc" },
           },

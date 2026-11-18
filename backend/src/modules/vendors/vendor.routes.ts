@@ -9,13 +9,14 @@ import {
   authorizeVendor,
 } from "../../middlewares/authorizeVendor.js";
 
-import { getVendorCategories, getVendorDashboard } from "./vendor.controller.js";
+import { getVendorBrands, getVendorCategories, getVendorDashboard } from "./vendor.controller.js";
 import productRoutes from "./products/product.routes.js";
 import documentRoutes from "./documents/document.routes.js";
 
 const router = Router();
 
 router.get("/categories", authenticate, authorizeVendor, getVendorCategories);
+router.get("/brands", authenticate, authorizeVendor, getVendorBrands);
 
 router.get(
   "/dashboard",

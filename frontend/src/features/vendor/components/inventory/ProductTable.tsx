@@ -10,6 +10,13 @@ interface ProductTableProps {
   error: string;
   onAddProduct: () => void;
   onRetry: () => void;
+  onView: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onArchive: (product: Product) => void;
+  onToggle: (product: Product) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 export default function ProductTable({
@@ -19,6 +26,13 @@ export default function ProductTable({
   error,
   onAddProduct,
   onRetry,
+  onView,
+  onEdit,
+  onArchive,
+  onToggle,
+  page,
+  totalPages,
+  onPageChange,
 }: ProductTableProps) {
   return (
     <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -53,15 +67,16 @@ export default function ProductTable({
                 <th className="px-4 py-4">Brand</th>
                 <th className="px-4 py-4">Price</th>
                 <th className="px-4 py-4">Stock</th>
-                <th className="px-4 py-4">Units sold</th>
+                <th className="px-4 py-4">Updated</th>
                 <th className="px-4 py-4">Status</th>
                 <th className="px-4 py-4">Listing review</th>
+                <th className="px-4 py-4">Actions</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-100">
               {products.map((product) => (
-                <ProductRow key={product.id} product={product} />
+                <ProductRow key={product.id} product={product} onView={onView} onEdit={onEdit} onArchive={onArchive} onToggle={onToggle} />
               ))}
             </tbody>
           </table>
@@ -69,8 +84,9 @@ export default function ProductTable({
       )}
 
       {!loading && !error && products.length > 0 && (
-        <div className="border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
-          Showing {products.length} of {totalProducts} products
+        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
+          <span>Showing {products.length} of {totalProducts} products · page {page} of {totalPages}</span>
+          <div className="flex gap-2"><button disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="rounded border px-3 py-1.5 disabled:opacity-40">Previous</button><button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} className="rounded border px-3 py-1.5 disabled:opacity-40">Next</button></div>
         </div>
       )}
     </div>

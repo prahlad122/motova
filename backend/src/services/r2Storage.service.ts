@@ -80,6 +80,13 @@ export const uploadCategoryImageToR2 = async (file: Express.Multer.File): Promis
   return storageKey;
 };
 
+export const uploadProductImageToR2 = async (file: Express.Multer.File, vendorProfileId: string): Promise<string> => {
+  const fileName = sanitizeFileName(file.originalname);
+  const storageKey = `product-images/${vendorProfileId}/${randomUUID()}-${fileName}`;
+  await r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET_NAME, Key: storageKey, Body: file.buffer, ContentType: file.mimetype, ContentLength: file.size }));
+  return storageKey;
+};
+
 /**
  * Delete a document from R2.
  * Useful for cleaning up if a database operation fails.
